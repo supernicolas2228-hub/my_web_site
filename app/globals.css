@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-gradient: linear-gradient(135deg, #e8edf5 0%, #f5f0ff 50%, #e0f0ff 100%);
+  --foreground: #000000;
+  --glass-bg: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+.dark {
+  --background-gradient: linear-gradient(135deg, #0a0a1a 0%, #0d1b2a 50%, #111827 100%);
+  --foreground: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background-gradient);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+html:not(.dark) body,
+html:not(.dark) #hero p,
+html:not(.dark) #about,
+html:not(.dark) #about *,
+html:not(.dark) #services,
+html:not(.dark) #services * {
+  color: #000000;
+}
+
+html:not(.dark) #services .service-icon,
+html:not(.dark) #services .service-icon * {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+@keyframes gradientDrift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    backdrop-filter: blur(20px) saturate(180%);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
+
+  .nav-link-underline {
+    position: relative;
+  }
+
+  .nav-link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #6366f1, #a855f7);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .nav-link-underline:hover::after {
+    transform: scaleX(1);
+  }
+
+  .about-gradient {
+    background: linear-gradient(120deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.2), rgba(14, 165, 233, 0.22));
+    background-size: 220% 220%;
+    animation: gradientDrift 10s ease infinite;
+    filter: blur(40px);
+  }
+
+  .site-container {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(100% - 1.5rem, 72rem);
+  }
+
+  .section-space {
+    padding-top: clamp(3rem, 7vw, 5rem);
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+}
+
+.dark #about,
+.dark #about *,
+.dark #services,
+.dark #services * {
+  color: #ffffff;
+}
+
+.dark #hero p {
+  color: #ffffff;
+}
+
+/*
+  Темы: светлая — основной текст чёрный; тёмная — белый.
+  (Переключатель next-themes + Tailwind darkMode: "class")
+*/
+html:not(.dark) #pricing,
+html:not(.dark) #pricing *,
+html:not(.dark) #advantages,
+html:not(.dark) #advantages * {
+  color: #000000 !important;
+}
+
+.dark #pricing,
+.dark #pricing *,
+.dark #advantages,
+.dark #advantages * {
+  color: #ffffff !important;
+}
+
+/* Страница /about — тот же контраст текста, что и у блока #about */
+html:not(.dark) #about-page,
+html:not(.dark) #about-page * {
+  color: #000000;
+}
+
+.dark #about-page,
+.dark #about-page * {
+  color: #ffffff;
+}
