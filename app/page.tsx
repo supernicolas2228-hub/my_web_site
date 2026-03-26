@@ -6,10 +6,12 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Portfolio from "@/components/Portfolio";
 import Pricing from "@/components/Pricing";
+import SignupPrompt from "@/components/SignupPrompt";
 
 export default function HomePage() {
   return (
     <>
+      <SignupPrompt />
       <Header />
       <main>
         <Hero />

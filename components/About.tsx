@@ -26,7 +26,7 @@ export default function About() {
               href="/about"
               className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 text-base font-semibold text-white shadow-glass transition hover:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
             >
-              Подробнее
+              Узнать больше
             </Link>
           </div>
         </div>

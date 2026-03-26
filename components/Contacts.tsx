@@ -48,6 +48,7 @@ export default function Contacts() {
           >
             Отзывы в Telegram-канале
           </a>
+
         </div>
       </div>
     </section>

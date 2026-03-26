@@ -5,6 +5,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# БД не в архиве деплоя — каталог с правами на запись для процесса Node (PM2).
+mkdir -p data
+chmod 775 data 2>/dev/null || true
+
+# tar при обновлении не удаляет файлы, которых больше нет в архиве — чистим устаревшие API.
+rm -rf 'app/api/admin/clients/[id]/stage'
+
 echo "==> npm ci"
 npm ci
 

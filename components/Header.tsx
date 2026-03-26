@@ -1,13 +1,15 @@
 "use client";
 
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import { Menu, Moon, ShoppingCart, Sun, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/#about", label: "О нас" },
-  { href: "/#pricing", label: "Услуги и цены" },
+  { href: "/#pricing", label: "Услуги и оплата" },
   { href: "/#advantages", label: "Почему мы" },
   { href: "/#portfolio", label: "Портфолио" },
   { href: "/#contacts", label: "Контакты" }
@@ -17,6 +19,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { setTheme, resolvedTheme } = useTheme();
+  const { totalCount } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -50,6 +53,24 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/account"
+            className="hidden rounded-xl px-3 py-2 text-sm font-semibold opacity-90 hover:bg-white/10 md:inline-block"
+          >
+            Личный кабинет
+          </Link>
+          <Link
+            href="/cart"
+            className="glass-card relative flex h-11 w-11 items-center justify-center rounded-xl"
+            aria-label="Корзина"
+          >
+            <ShoppingCart size={18} />
+            {totalCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-fuchsia-500 px-1 text-[10px] font-bold text-white">
+                {totalCount > 99 ? "99+" : totalCount}
+              </span>
+            )}
+          </Link>
           <motion.button
             aria-label="Переключить тему"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
@@ -90,6 +111,20 @@ export default function Header() {
                   {item.label}
                 </a>
               ))}
+              <Link
+                href="/account"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2 text-base font-medium hover:bg-white/10"
+              >
+                Личный кабинет
+              </Link>
+              <Link
+                href="/cart"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-2 text-base font-medium hover:bg-white/10"
+              >
+                Корзина {totalCount > 0 ? `(${totalCount})` : ""}
+              </Link>
             </nav>
           </motion.aside>
         )}

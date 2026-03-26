@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Страховка, если Tailwind не подхватился при dev: базовый вид не «как Word» */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
 :root {
   --background-gradient: linear-gradient(135deg, #e8edf5 0%, #f5f0ff 50%, #e0f0ff 100%);
   --foreground: #000000;
@@ -140,4 +153,61 @@ html:not(.dark) #about-page * {
 .dark #about-page,
 .dark #about-page * {
   color: #ffffff;
+}
+
+/* Карусель услуг: только нижняя (горизонтальная) прокрутка */
+.pricing-carousel-scroll {
+  overflow-y: hidden;
+  -ms-overflow-style: auto;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(99, 102, 241, 0.45) transparent;
+}
+
+.pricing-carousel-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.pricing-carousel-scroll::-webkit-scrollbar:vertical {
+  width: 0;
+}
+
+.pricing-carousel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pricing-carousel-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.65), rgba(168, 85, 247, 0.65));
+  border-radius: 9999px;
+}
+
+/* Светлая тема: сделать рамки и фон полей ввода более контрастными */
+html:not(.dark)
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+html:not(.dark) textarea,
+html:not(.dark) select {
+  border-color: rgba(15, 23, 42, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.78) !important;
+  color: #0f172a !important;
+}
+
+html:not(.dark)
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+  border-color: rgba(99, 102, 241, 0.75) !important;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15);
+}
+
+/* Выпадающие списки: чтобы варианты были видны */
+html:not(.dark) select option,
+html:not(.dark) select optgroup {
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
+.dark select option,
+.dark select optgroup {
+  color: #ffffff;
+  background-color: #0b1220;
 }

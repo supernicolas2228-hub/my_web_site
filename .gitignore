@@ -22,6 +22,12 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Local DB (не коммить базу/данные клиентов)
+data/app.db
+data/app.db-*
+data/*.db
+data/*.db-*
+
 # IDE / OS
 .idea/
 .vscode/

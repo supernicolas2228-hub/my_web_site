@@ -1,0 +1,24 @@
+=== After pack-for-upload.ps1 ===
+
+1) WinSCP: connect to your VPS (SFTP, port 22, user root).
+
+2) Upload the file truweb-deploy-....tar.gz from your Desktop to:
+   /tmp/truweb-deploy.tar.gz
+   (rename on server if needed so the name is exactly: truweb-deploy.tar.gz)
+
+3) Open SSH in WinSCP (Commands -> Open in PuTTY) or use any SSH client.
+
+4) Paste these lines ONE BLOCK (then Enter):
+
+mkdir -p /var/www/business-card-site
+cd /var/www/business-card-site
+tar -xzf /tmp/truweb-deploy.tar.gz
+rm -f /tmp/truweb-deploy.tar.gz
+chmod +x deploy/server-build.sh
+bash deploy/server-build.sh
+
+5) Open in browser:
+   http://YOUR_SERVER_IP/
+   http://YOUR_SERVER_IP/about
+
+If folder on server is NOT /var/www/business-card-site, change both paths in step 4 to your real path.

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "http://138.124.90.218";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://truewebwork.ru").replace(/\/+$/, "");
 
   return [
     {
@@ -15,6 +15,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8
+    },
+    {
+      url: `${baseUrl}/cart`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6
+    },
+    {
+      url: `${baseUrl}/account`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7
     }
   ];
 }

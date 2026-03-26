@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Montserrat, Syne } from "next/font/google";
-import ThemeProvider from "@/components/ThemeProvider";
+import ClientProviders from "@/components/ClientProviders";
 import "./globals.css";
 
 const syne = Syne({
@@ -19,13 +19,51 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://example.com"),
-  title: "TrueWeb",
-  description: "TrueWeb: сайты, боты, отзывы и быстрый контакт через Telegram.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://truewebwork.ru"),
+  title: {
+    default: "TrueWeb — разработка сайтов и веб‑сервисов",
+    template: "%s — TrueWeb"
+  },
+  description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов. Быстрый запуск, поддержка и рост продаж.",
+  alternates: {
+    canonical: "/"
+  },
+  applicationName: "TrueWeb",
+  keywords: [
+    "разработка сайтов",
+    "сайт под ключ",
+    "лендинг",
+    "интернет-магазин",
+    "веб-разработка",
+    "создание сайта",
+    "TrueWeb"
+  ],
   openGraph: {
-    title: "TrueWeb",
-    description: "Сайты и боты для бизнеса, отзывы и связь через Telegram-бота.",
+    type: "website",
+    url: "/",
+    title: "TrueWeb — разработка сайтов и веб‑сервисов",
+    description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов. Быстрый запуск и поддержка.",
+    siteName: "TrueWeb",
+    locale: "ru_RU",
+    images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "TrueWeb" }]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TrueWeb — разработка сайтов и веб‑сервисов",
+    description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов.",
     images: ["/og-image.svg"]
+  },
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    shortcut: ["/favicon.svg"]
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true
+    }
   }
 };
 
@@ -33,7 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${syne.variable} ${manrope.variable} ${montserrat.variable} font-body antialiased`}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
