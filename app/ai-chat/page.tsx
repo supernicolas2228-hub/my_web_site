@@ -19,7 +19,7 @@ export default function AiChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: "Здравствуйте! 👋 Я ИИ-консультант TrueWeb на базе DeepSeek — помогаю с расчётом стоимости сайта или бота 💰\n\nНапишите, что вы хотите на сайте (или какой нужен Telegram-бот), и я подскажу ориентировочную цену в рублях ✨ Можно коротко: ниша, количество страниц, нужен ли магазин, формы, бот и т.д.\n\nКогда согласуем сумму, для оплаты напишите в чат слово «оплатить» — в корзину добавится позиция с этой суммой 🛒"
+      text: "Здравствуйте! 👋 Я ИИ-консультант TrueWeb — помогаю с расчётом стоимости сайта или бота 💰\n\nНапишите, что вы хотите на сайте (или какой нужен Telegram-бот), и я подскажу ориентировочную цену в рублях ✨ Можно коротко: ниша, количество страниц, нужен ли магазин, формы, бот и т.д.\n\nКогда согласуем сумму, для оплаты напишите в чат слово «оплатить» — в корзину добавится позиция с этой суммой 🛒"
     }
   ]);
 
@@ -105,19 +105,19 @@ export default function AiChatPage() {
   return (
     <main className="relative min-h-screen px-3 pb-10 pt-24 sm:px-4">
       <div className="site-container max-w-4xl">
-        <div className="glass-card rounded-2xl p-5 sm:p-6">
+        <div className="glass-card rounded-2xl p-5 text-black dark:text-white sm:p-6">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold">Расчёт с ИИ (DeepSeek)</h1>
+            <h1 className="text-2xl font-bold text-black dark:text-white">Расчёт с ИИ</h1>
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/cart"
-                className="rounded-lg border border-indigo-400/50 bg-indigo-500/15 px-3 py-1.5 text-sm font-semibold opacity-95 transition hover:bg-indigo-500/25"
+                className="rounded-lg border border-black/20 bg-black/5 px-3 py-1.5 text-sm font-semibold text-black transition hover:bg-black/10 dark:border-indigo-400/50 dark:bg-indigo-500/15 dark:text-white dark:hover:bg-indigo-500/25"
               >
                 Корзина
               </Link>
               <Link
                 href="/"
-                className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-85 transition hover:bg-white/10"
+                className="rounded-lg border border-black/20 px-3 py-1.5 text-sm text-black/85 transition hover:bg-black/5 dark:border-white/25 dark:text-white dark:opacity-85 dark:hover:bg-white/10"
               >
                 На главную
               </Link>
@@ -151,7 +151,7 @@ export default function AiChatPage() {
                 }
               }}
               placeholder="Опишите проект или напишите «оплатить» после согласования суммы"
-              className="w-full rounded-xl border border-white/25 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+              className="w-full rounded-xl border border-black/20 bg-transparent px-3 py-2 text-black outline-none placeholder:text-black/45 focus:border-indigo-500 dark:border-white/25 dark:text-white dark:placeholder:text-white/45"
             />
             <button
               type="button"
@@ -162,8 +162,8 @@ export default function AiChatPage() {
               Отправить
             </button>
           </div>
-          <p className="mt-2 text-xs opacity-70">
-            Ответы — DeepSeek с учётом цен минимальных пакетов TrueWeb. Слово «оплатить» добавляет в корзину позицию по
+          <p className="mt-2 text-xs text-black/65 dark:opacity-70">
+            Ответы ИИ с учётом цен минимальных пакетов TrueWeb. Слово «оплатить» добавляет в корзину позицию по
             переписке; банк списывает сумму на ЮKassa. Точная смета по договору — после ТЗ.
           </p>
         </div>

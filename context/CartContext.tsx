@@ -5,7 +5,57 @@ import { SERVICES_CATALOG } from "@/lib/services-catalog";
 import type { CartLine, CustomCartLine } from "@/lib/cart-lines";
 import { CUSTOM_QUOTE_MAX_RUB, CUSTOM_QUOTE_MIN_RUB, lineStableKey, parseCartLine } from "@/lib/cart-lines";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+
+function CartAddedDialog({ title, onClose }: { title: string; onClose: () => void }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const ui = useMemo(() => {
+    return {
+      overlay: isDark ? "bg-black/55" : "bg-black/40",
+      panel:
+        "max-w-md rounded-2xl border p-6 shadow-glass backdrop-blur-xl " +
+        (isDark
+          ? "border-white/15 bg-slate-950/95 text-white"
+          : "border-slate-200/90 bg-white/[0.96] text-slate-900"),
+      h2: "text-xl font-bold " + (isDark ? "text-white" : "text-slate-900"),
+      line: "mt-2 text-sm " + (isDark ? "text-slate-200" : "text-slate-700"),
+      next: "mt-4 text-sm " + (isDark ? "text-slate-300" : "text-slate-600"),
+      secondary: isDark
+        ? "flex-1 rounded-xl border-2 border-white/25 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+        : "flex-1 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50",
+      primary:
+        "flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-glass ring-2 ring-indigo-500/30 transition hover:opacity-95"
+    };
+  }, [isDark]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm ${ui.overlay}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-choice-title"
+      onClick={onClose}
+    >
+      <div className={ui.panel} onClick={(e) => e.stopPropagation()}>
+        <h2 id="cart-choice-title" className={ui.h2}>
+          Добавлено в корзину
+        </h2>
+        <p className={ui.line}>&laquo;{title}&raquo;</p>
+        <p className={ui.next}>Что дальше?</p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button type="button" onClick={onClose} className={ui.secondary}>
+            Продолжить покупки
+          </button>
+          <Link href="/cart" onClick={onClose} className={ui.primary}>
+            В корзину и оплатить
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const STORAGE_KEY = "truweb-cart-v1";
 
@@ -196,39 +246,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider value={value}>
       {children}
-      {choiceModal.open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="cart-choice-title"
-          onClick={closeChoiceModal}
-        >
-          <div className="glass-card max-w-md rounded-2xl p-6 shadow-glass" onClick={(e) => e.stopPropagation()}>
-            <h2 id="cart-choice-title" className="text-xl font-bold">
-              Добавлено в корзину
-            </h2>
-            <p className="mt-2 text-sm opacity-90">&laquo;{choiceModal.title}&raquo;</p>
-            <p className="mt-4 text-sm opacity-80">Что дальше?</p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <button
-                type="button"
-                onClick={closeChoiceModal}
-                className="flex-1 rounded-xl border border-white/30 bg-white/10 px-4 py-3 text-sm font-semibold transition hover:bg-white/20"
-              >
-                Продолжить покупки
-              </button>
-              <Link
-                href="/cart"
-                onClick={closeChoiceModal}
-                className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-glass transition hover:opacity-95"
-              >
-                В корзину и оплатить
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      {choiceModal.open && <CartAddedDialog title={choiceModal.title} onClose={closeChoiceModal} />}
     </CartContext.Provider>
   );
 }

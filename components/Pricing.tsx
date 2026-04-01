@@ -1,12 +1,102 @@
 "use client";
 
-import { serviceIdToProjectType, useCalculator } from "@/context/CalculatorContext";
+import {
+  serviceIdToProjectType,
+  useCalculator,
+  type OpenCalculatorOptions
+} from "@/context/CalculatorContext";
 import { useCart } from "@/context/CartContext";
 import type { ServiceId } from "@/lib/services-catalog";
 import { SERVICES_CATALOG } from "@/lib/services-catalog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+/** Портал на body: inline-цвета, чтобы не бороться с глобальным CSS и кэшем. */
+function PricingDetailModalBody({
+  serviceId,
+  onClose,
+  openCalculator
+}: {
+  serviceId: ServiceId;
+  onClose: () => void;
+  openCalculator: (opts?: OpenCalculatorOptions) => void;
+}) {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const isDark = mounted && resolvedTheme === "dark";
+  const ink = isDark ? "#f1f5f9" : "#0f172a";
+  const inkMuted = isDark ? "#94a3b8" : "#475569";
+  const footerInk = isDark ? "#ffffff" : "#0f172a";
+  const panelBg = isDark ? "rgba(15, 23, 42, 0.97)" : "rgba(255, 255, 255, 0.97)";
+  const panelBorder = isDark ? "rgba(129, 140, 248, 0.45)" : "rgba(15, 23, 42, 0.18)";
+  const closeBorder = isDark ? "rgba(241, 245, 249, 0.35)" : "rgba(15, 23, 42, 0.28)";
+
+  const svc = SERVICES_CATALOG.find((s) => s.id === serviceId);
+  if (!svc) return null;
+
+  return (
+    <div
+      className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-2 p-6 shadow-2xl backdrop-blur-xl"
+      style={{
+        color: ink,
+        backgroundColor: panelBg,
+        borderColor: panelBorder
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 id="pricing-detail-title" className="text-xl font-bold" style={{ color: ink }}>
+            {svc.title}
+          </h3>
+          <p className="mt-1 text-sm" style={{ color: inkMuted }}>
+            Минимальный пакет
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg border px-3 py-1.5 text-sm"
+          style={{
+            color: ink,
+            borderColor: closeBorder,
+            backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"
+          }}
+        >
+          Закрыть
+        </button>
+      </div>
+      <p className="mt-2 text-lg font-bold" style={{ color: ink }}>
+        {svc.priceLabel} ₽
+      </p>
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(svc.id) }), 0);
+        }}
+        className="mt-4 w-full rounded-xl px-4 py-4 text-center text-base font-bold shadow-lg transition hover:opacity-95 active:scale-[0.99]"
+        style={{ backgroundColor: "#4f46e5", color: "#ffffff" }}
+      >
+        Расчёт стоимости
+      </button>
+      <p className="mt-2 text-center text-xs" style={{ color: inkMuted }}>
+        Быстрый тест или чат с ИИ — ориентировочная цена.
+      </p>
+      <div className="mt-5 whitespace-pre-line text-sm leading-relaxed" style={{ color: ink }}>
+        {svc.hint}
+      </div>
+      <p className="mt-6 text-center text-sm font-medium" style={{ color: footerInk }}>
+        Если вы хотите больше — расширенный функционал, уникальный дизайн или интеграции — рассчитаем стоимость в
+        калькуляторе.
+      </p>
+    </div>
+  );
+}
 
 function visibleColumns(width: number): 1 | 2 | 3 {
   if (width >= 1024) return 3;
@@ -65,15 +155,15 @@ export default function Pricing() {
   return (
     <section id="pricing" className="section-space px-3 sm:px-4">
       <div className="site-container">
-        <h2 className="font-heading text-3xl font-bold md:text-4xl">Наши продукты</h2>
-        <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+        <h2 className="font-heading text-3xl font-bold text-black dark:text-white md:text-4xl">Наши продукты</h2>
+        <p className="mt-2 text-sm font-medium text-black/80 dark:text-slate-300">
           Цены ниже — за минимальный пакет: базовый объём работ и функций по каждой услуге. Подробности — в карточке по
           кнопке «Подробнее» (под «Добавить в корзину»).
         </p>
-        <p className="mt-3 max-w-2xl text-base opacity-90 md:text-lg">
+        <p className="mt-3 max-w-2xl text-base text-black opacity-90 dark:text-white md:text-lg">
           Листайте влево и вправо — видно {cols === 1 ? "одну" : cols === 2 ? "две" : "три"} услуги, остальные рядом.
-          Добавляйте услуги в корзину и оплачивайте через ЮKassa. В карточке «Подробнее» — выбор:{" "}
-          <span className="font-semibold text-indigo-700 dark:text-indigo-200">тест или расчёт с ИИ (DeepSeek)</span>.
+          Добавляйте услуги в корзину и оплачивайте через ЮKassa. В карточке «Подробнее» можно открыть{" "}
+          <span className="font-semibold dark:text-indigo-200">расчёт стоимости</span>.
         </p>
 
         <div className="relative mt-8">
@@ -112,11 +202,13 @@ export default function Pricing() {
                 }}
               >
                 <div>
-                  <h3 className="text-xl font-semibold leading-snug">{item.title}</h3>
-                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed opacity-90 md:text-base">{item.hint}</p>
+                  <h3 className="text-xl font-semibold leading-snug text-black dark:text-white">{item.title}</h3>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-black/85 dark:opacity-90 md:text-base dark:text-white">
+                    {item.hint}
+                  </p>
                 </div>
                 <div className="mt-6 space-y-3">
-                  <p className="text-lg font-bold text-indigo-600 dark:text-white">{item.priceLabel}</p>
+                  <p className="text-lg font-bold text-black dark:text-white">{item.priceLabel}</p>
                   <button
                     type="button"
                     onClick={() => addLine(item.id)}
@@ -127,19 +219,9 @@ export default function Pricing() {
                   <button
                     type="button"
                     onClick={() => setDetailId(item.id)}
-                    className="w-full rounded-xl border-2 border-indigo-400/60 bg-transparent px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-500/10 dark:border-indigo-400/50 dark:text-indigo-200 dark:hover:bg-white/10"
+                    className="w-full rounded-xl border-2 border-black/20 bg-transparent px-4 py-3 text-sm font-semibold text-black transition hover:bg-black/5 dark:border-indigo-400/50 dark:text-indigo-200 dark:hover:bg-white/10"
                   >
                     Подробнее
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDetailId(null);
-                      window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(item.id) }), 0);
-                    }}
-                    className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-md ring-2 ring-indigo-500/40 transition hover:bg-indigo-500 active:scale-[0.99] dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                  >
-                    Тест или ИИ (DeepSeek)
                   </button>
                 </div>
               </article>
@@ -160,53 +242,11 @@ export default function Pricing() {
               aria-labelledby="pricing-detail-title"
               onClick={() => setDetailId(null)}
             >
-              <div
-                className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-indigo-400/30 p-6 shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {(() => {
-                  const svc = SERVICES_CATALOG.find((s) => s.id === detailId);
-                  if (!svc) return null;
-                  return (
-                    <>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 id="pricing-detail-title" className="text-xl font-bold">
-                            {svc.title}
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Минимальный пакет</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setDetailId(null)}
-                          className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-80 hover:bg-white/10"
-                        >
-                          Закрыть
-                        </button>
-                      </div>
-                      <p className="mt-2 text-lg font-bold text-indigo-600 dark:text-white">{svc.priceLabel} ₽</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDetailId(null);
-                          window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(svc.id) }), 0);
-                        }}
-                        className="mt-4 w-full rounded-xl bg-indigo-600 px-4 py-4 text-center text-base font-bold text-white shadow-lg ring-2 ring-indigo-400/50 transition hover:bg-indigo-500 active:scale-[0.99] dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                      >
-                        Тест или расчёт с ИИ (DeepSeek)
-                      </button>
-                      <p className="mt-2 text-center text-xs opacity-75">
-                        Сначала выберите: быстрый тест или чат с ИИ на базе DeepSeek — ориентировочная цена.
-                      </p>
-                      <div className="mt-5 whitespace-pre-line text-sm leading-relaxed opacity-90">{svc.hint}</div>
-                      <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-                        Если вы хотите больше — расширенный функционал, уникальный дизайн или интеграции — рассчитаем
-                        индивидуально.
-                      </p>
-                    </>
-                  );
-                })()}
-              </div>
+              <PricingDetailModalBody
+                serviceId={detailId}
+                onClose={() => setDetailId(null)}
+                openCalculator={openCalculator}
+              />
             </div>,
             document.body
           )}

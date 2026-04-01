@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode
 } from "react";
+import { useTheme } from "next-themes";
 
 export type CalculatorProjectType = "business" | "businessCard" | "landing" | "bot";
 
@@ -361,29 +362,74 @@ function CostCalculatorModal(props: ModalProps) {
 
   const formattedPrice = new Intl.NumberFormat("ru-RU").format(estimatedPrice);
 
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  const ui = useMemo(() => {
+    const ghostBtn = isDark
+      ? "rounded-lg border border-white/30 bg-transparent px-3 py-1.5 text-sm text-white hover:bg-white/10"
+      : "rounded-lg border border-slate-300 bg-white/85 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-100";
+    return {
+      overlay: isDark ? "bg-black/60" : "bg-black/45",
+      panel:
+        "w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-2xl backdrop-blur-xl sm:max-h-[85vh] " +
+        (isDark
+          ? "border-white/20 bg-slate-950/[0.97] text-white"
+          : "border-slate-200/90 bg-white/[0.96] text-slate-900"),
+      h2: "text-xl font-bold " + (isDark ? "text-white" : "text-slate-900"),
+      lead: "mt-1 text-sm " + (isDark ? "text-white/90" : "text-slate-600"),
+      ghostBtn,
+      hint:
+        "mt-4 rounded-xl border p-3 text-sm " +
+        (isDark
+          ? "border-white/20 bg-white/5 text-white/90"
+          : "border-slate-200/90 bg-slate-50/90 text-slate-600"),
+      testBtn:
+        "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-md transition hover:opacity-95 sm:min-h-[3.25rem]",
+      aiBtn:
+        "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-4 py-3 font-semibold transition sm:min-h-[3.25rem] " +
+        (isDark
+          ? "border border-white/25 bg-white/10 text-white hover:bg-white/20"
+          : "border-2 border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-50"),
+      aiSub: "text-xs font-normal " + (isDark ? "text-white/85" : "text-slate-600"),
+      formWrap: "mt-5 space-y-4 text-left " + (isDark ? "text-white" : "text-slate-900"),
+      label: "block text-sm " + (isDark ? "text-white" : "text-slate-900"),
+      cap: "mb-1 block " + (isDark ? "text-white/85" : "text-slate-600"),
+      select:
+        "w-full rounded-lg border px-3 py-2 outline-none " +
+        (isDark
+          ? "border-white/25 bg-slate-900/90 text-white focus:border-indigo-400"
+          : "border-slate-300 bg-white/90 text-slate-900 focus:border-indigo-500"),
+      checkLabel: "flex items-center gap-2 text-sm " + (isDark ? "text-white" : "text-slate-900"),
+      fieldset: "space-y-2 text-sm " + (isDark ? "text-white" : "text-slate-900"),
+      legend: "mb-1 " + (isDark ? "text-white/85" : "text-slate-600"),
+      priceBox:
+        "mt-6 rounded-xl border p-4 text-left " +
+        (isDark
+          ? "border-indigo-400/40 bg-indigo-500/10 text-white"
+          : "border-indigo-300/80 bg-indigo-50/95 text-slate-800"),
+      priceLead: "text-sm " + (isDark ? "text-white/85" : "text-slate-600"),
+      priceMain: "mt-1 text-2xl font-extrabold " + (isDark ? "text-white" : "text-slate-900"),
+      priceFoot: "mt-2 text-xs " + (isDark ? "text-white/80" : "text-slate-500")
+    };
+  }, [isDark]);
+
   return (
     <div
-      className="fixed inset-0 z-[140] flex items-end justify-center bg-black/55 p-4 sm:items-center"
+      className={`fixed inset-0 z-[140] flex items-end justify-center p-4 backdrop-blur-[2px] sm:items-center ${ui.overlay}`}
       onClick={onClose}
     >
-      <div
-        className="glass-card w-full max-w-2xl overflow-y-auto rounded-2xl p-6 sm:max-h-[85vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={ui.panel} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold">Расчёт стоимости</h2>
-            <p className="mt-1 text-sm opacity-80">
+            <h2 className={ui.h2}>Расчёт стоимости</h2>
+            <p className={ui.lead}>
               {calculatorMode === "chooser"
-                ? "Ключевая фишка TrueWeb: быстрый тест или диалог с ИИ на базе DeepSeek — выберите, что удобнее."
+                ? "Ключевая фишка TrueWeb: быстрый тест или диалог с ИИ — выберите, что удобнее."
                 : "Ответьте на вопросы, и мы покажем ориентировочную цену."}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-80 hover:bg-white/10"
-          >
+          <button type="button" onClick={onClose} className={ui.ghostBtn}>
             Закрыть
           </button>
         </div>
@@ -398,10 +444,10 @@ function CostCalculatorModal(props: ModalProps) {
                 onFocus={() => setHoveredMode("test")}
                 onBlur={() => setHoveredMode(null)}
                 onClick={() => setCalculatorMode("test")}
-                className="inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/30 bg-white/10 px-4 py-3 font-semibold transition hover:bg-white/20 sm:min-h-[3.25rem]"
+                className={ui.testBtn}
               >
                 <span>Пройти тест</span>
-                <span className="text-xs font-normal opacity-80">вопросы и смета</span>
+                <span className="text-xs font-normal text-white/90">вопросы и смета</span>
               </button>
               <button
                 type="button"
@@ -413,35 +459,31 @@ function CostCalculatorModal(props: ModalProps) {
                   onClose();
                   window.location.assign("/ai-chat");
                 }}
-                className="inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-indigo-400/50 bg-indigo-500/15 px-4 py-3 font-semibold text-indigo-950 transition hover:bg-indigo-500/25 dark:text-indigo-50 dark:hover:bg-indigo-500/20 sm:min-h-[3.25rem]"
+                className={ui.aiBtn}
               >
-                <span>Расчёт с ИИ (DeepSeek)</span>
-                <span className="text-xs font-normal opacity-85">живой чат</span>
+                <span>Расчёт с ИИ</span>
+                <span className={ui.aiSub}>живой чат</span>
               </button>
             </div>
-            <div className="mt-4 rounded-xl border border-white/25 bg-white/5 p-3 text-sm opacity-90">
+            <div className={ui.hint}>
               {hoveredMode === "ai" &&
-                "Чат с ИИ на базе DeepSeek: опишите задачу своими словами — получите ориентир по цене и сможете добавить смету в корзину словом «оплатить»."}
+                "Чат с ИИ: опишите задачу своими словами — получите ориентир по цене и сможете добавить смету в корзину словом «оплатить»."}
               {hoveredMode === "test" &&
                 "Пошаговый тест: сфера, цели, страницы, сроки — в конце покажем ориентировочную стоимость под ваш сценарий."}
               {!hoveredMode && "Наведите курсор на кнопку, чтобы увидеть описание."}
             </div>
           </div>
         ) : (
-          <div className="mt-5 space-y-4 text-left">
-            <button
-              type="button"
-              onClick={() => setCalculatorMode("chooser")}
-              className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-85 hover:bg-white/10"
-            >
+          <div className={ui.formWrap}>
+            <button type="button" onClick={() => setCalculatorMode("chooser")} className={ui.ghostBtn}>
               ← Назад к выбору
             </button>
-            <label className="block text-sm">
-              <span className="mb-1 block opacity-80">Что вы хотите создать?</span>
+            <label className={ui.label}>
+              <span className={ui.cap}>Что вы хотите создать?</span>
               <select
                 value={projectType}
                 onChange={(e) => setProjectType(e.target.value as CalculatorProjectType)}
-                className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                className={ui.select}
               >
                 <option value="business">Сайт-Бизнес</option>
                 <option value="businessCard">Сайт-Визитка</option>
@@ -450,8 +492,8 @@ function CostCalculatorModal(props: ModalProps) {
               </select>
             </label>
 
-            <label className="block text-sm">
-              <span className="mb-1 block opacity-80">Сфера бизнеса</span>
+            <label className={ui.label}>
+              <span className={ui.cap}>Сфера бизнеса</span>
               <select
                 value={businessSphere}
                 onChange={(e) =>
@@ -466,7 +508,7 @@ function CostCalculatorModal(props: ModalProps) {
                       | "other"
                   )
                 }
-                className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                className={ui.select}
               >
                 <option value="services">Услуги (ремонт, консалтинг, B2B)</option>
                 <option value="beauty">Красота и здоровье</option>
@@ -478,12 +520,12 @@ function CostCalculatorModal(props: ModalProps) {
               </select>
             </label>
 
-            <label className="block text-sm">
-              <span className="mb-1 block opacity-80">Главная цель сайта</span>
+            <label className={ui.label}>
+              <span className={ui.cap}>Главная цель сайта</span>
               <select
                 value={mainGoal}
                 onChange={(e) => setMainGoal(e.target.value as "leads" | "sales" | "brand" | "automation")}
-                className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                className={ui.select}
               >
                 <option value="leads">Получать заявки</option>
                 <option value="sales">Прямые продажи</option>
@@ -493,12 +535,12 @@ function CostCalculatorModal(props: ModalProps) {
             </label>
 
             {projectType !== "bot" && (
-              <label className="block text-sm">
-                <span className="mb-1 block opacity-80">Сколько страниц планируете?</span>
+              <label className={ui.label}>
+                <span className={ui.cap}>Сколько страниц планируете?</span>
                 <select
                   value={pageCount}
                   onChange={(e) => setPageCount(e.target.value as "one" | "small" | "medium" | "large")}
-                  className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                  className={ui.select}
                 >
                   <option value="one">1 страница</option>
                   <option value="small">До 5 страниц</option>
@@ -509,12 +551,12 @@ function CostCalculatorModal(props: ModalProps) {
             )}
 
             {projectType === "business" && (
-              <label className="block text-sm">
-                <span className="mb-1 block opacity-80">Структура сайта-бизнес</span>
+              <label className={ui.label}>
+                <span className={ui.cap}>Структура сайта-бизнес</span>
                 <select
                   value={businessStructure}
                   onChange={(e) => setBusinessStructure(e.target.value as "simple" | "catalog" | "extended")}
-                  className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                  className={ui.select}
                 >
                   <option value="simple">Базовая структура (главная + услуги)</option>
                   <option value="catalog">С каталогом услуг и кейсами</option>
@@ -524,12 +566,12 @@ function CostCalculatorModal(props: ModalProps) {
             )}
 
             {projectType === "businessCard" && (
-              <label className="block text-sm">
-                <span className="mb-1 block opacity-80">Наполнение сайта-визитки</span>
+              <label className={ui.label}>
+                <span className={ui.cap}>Наполнение сайта-визитки</span>
                 <select
                   value={visitcardContent}
                   onChange={(e) => setVisitcardContent(e.target.value as "basic" | "portfolio" | "full")}
-                  className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                  className={ui.select}
                 >
                   <option value="basic">Базово: о нас, контакты, услуги</option>
                   <option value="portfolio">Плюс портфолио и отзывы</option>
@@ -539,12 +581,12 @@ function CostCalculatorModal(props: ModalProps) {
             )}
 
             {projectType === "landing" && (
-              <label className="block text-sm">
-                <span className="mb-1 block opacity-80">Воронка для лендинга</span>
+              <label className={ui.label}>
+                <span className={ui.cap}>Воронка для лендинга</span>
                 <select
                   value={landingFunnel}
                   onChange={(e) => setLandingFunnel(e.target.value as "simple" | "quiz" | "advanced")}
-                  className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                  className={ui.select}
                 >
                   <option value="simple">Простая: оффер + форма</option>
                   <option value="quiz">С квизом/калькулятором</option>
@@ -555,12 +597,12 @@ function CostCalculatorModal(props: ModalProps) {
 
             {projectType === "bot" && (
               <>
-                <label className="block text-sm">
-                  <span className="mb-1 block opacity-80">Тип Telegram-бота</span>
+                <label className={ui.label}>
+                  <span className={ui.cap}>Тип Telegram-бота</span>
                   <select
                     value={botScenario}
                     onChange={(e) => setBotScenario(e.target.value as "faq" | "leads" | "sales")}
-                    className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                    className={ui.select}
                   >
                     <option value="faq">Бот-ответы (FAQ/поддержка)</option>
                     <option value="leads">Бот для заявок</option>
@@ -568,12 +610,12 @@ function CostCalculatorModal(props: ModalProps) {
                   </select>
                 </label>
 
-                <label className="block text-sm">
-                  <span className="mb-1 block opacity-80">Сколько сценариев диалога?</span>
+                <label className={ui.label}>
+                  <span className={ui.cap}>Сколько сценариев диалога?</span>
                   <select
                     value={botFlows}
                     onChange={(e) => setBotFlows(e.target.value as "few" | "medium" | "many")}
-                    className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                    className={ui.select}
                   >
                     <option value="few">1-3 сценария</option>
                     <option value="medium">4-8 сценариев</option>
@@ -581,19 +623,19 @@ function CostCalculatorModal(props: ModalProps) {
                   </select>
                 </label>
 
-                <label className="flex items-center gap-2 text-sm">
+                <label className={ui.checkLabel}>
                   <input type="checkbox" checked={botNeedsCrm} onChange={(e) => setBotNeedsCrm(e.target.checked)} />
                   Интеграция бота с CRM
                 </label>
               </>
             )}
 
-            <label className="block text-sm">
-              <span className="mb-1 block opacity-80">Срок запуска</span>
+            <label className={ui.label}>
+              <span className={ui.cap}>Срок запуска</span>
               <select
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value as "normal" | "fast" | "urgent")}
-                className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                className={ui.select}
               >
                 <option value="normal">Стандартный</option>
                 <option value="fast">Быстрее обычного</option>
@@ -601,21 +643,21 @@ function CostCalculatorModal(props: ModalProps) {
               </select>
             </label>
 
-            <label className="block text-sm">
-              <span className="mb-1 block opacity-80">Уровень дизайна</span>
+            <label className={ui.label}>
+              <span className={ui.cap}>Уровень дизайна</span>
               <select
                 value={designLevel}
                 onChange={(e) => setDesignLevel(e.target.value as "template" | "custom")}
-                className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                className={ui.select}
               >
                 <option value="template">На основе готовых решений</option>
                 <option value="custom">Полностью уникальный дизайн</option>
               </select>
             </label>
 
-            <fieldset className="space-y-2 text-sm">
-              <legend className="mb-1 opacity-80">Нужны дополнительные опции?</legend>
-              <label className="flex items-center gap-2">
+            <fieldset className={ui.fieldset}>
+              <legend className={ui.legend}>Нужны дополнительные опции?</legend>
+              <label className={ui.checkLabel}>
                 <input
                   type="checkbox"
                   checked={needCopywriting}
@@ -623,19 +665,19 @@ function CostCalculatorModal(props: ModalProps) {
                 />
                 Копирайтинг (подготовка продающих текстов)
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input type="checkbox" checked={needCms} onChange={(e) => setNeedCms(e.target.checked)} />
                 Админ-панель для редактирования контента
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input type="checkbox" checked={needBlog} onChange={(e) => setNeedBlog(e.target.checked)} />
                 Блог / новости
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input type="checkbox" checked={needForms} onChange={(e) => setNeedForms(e.target.checked)} />
                 Формы заявок и обратный звонок
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input
                   type="checkbox"
                   checked={needAnimations}
@@ -643,11 +685,11 @@ function CostCalculatorModal(props: ModalProps) {
                 />
                 Анимации и интерактивные блоки
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input type="checkbox" checked={extraSeo} onChange={(e) => setExtraSeo(e.target.checked)} />
                 SEO-подготовка и аналитика
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input
                   type="checkbox"
                   checked={extraIntegrations}
@@ -655,7 +697,7 @@ function CostCalculatorModal(props: ModalProps) {
                 />
                 Интеграции (CRM, формы, оплаты, боты)
               </label>
-              <label className="flex items-center gap-2">
+              <label className={ui.checkLabel}>
                 <input
                   type="checkbox"
                   checked={extraMultilang}
@@ -665,10 +707,10 @@ function CostCalculatorModal(props: ModalProps) {
               </label>
             </fieldset>
 
-            <div className="mt-6 rounded-xl border border-indigo-400/40 bg-indigo-500/10 p-4 text-left">
-              <p className="text-sm opacity-80">Ориентировочная стоимость проекта:</p>
-              <p className="mt-1 text-2xl font-extrabold">{formattedPrice} ₽</p>
-              <p className="mt-2 text-xs opacity-75">
+            <div className={ui.priceBox}>
+              <p className={ui.priceLead}>Ориентировочная стоимость проекта:</p>
+              <p className={ui.priceMain}>{formattedPrice} ₽</p>
+              <p className={ui.priceFoot}>
                 Точная цена зависит от финального ТЗ. Для точного расчета оставьте заявку в разделе контактов.
               </p>
             </div>

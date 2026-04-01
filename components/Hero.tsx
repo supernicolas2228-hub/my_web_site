@@ -1,10 +1,8 @@
 "use client";
 
-import { useCalculator } from "@/context/CalculatorContext";
 import { motion } from "framer-motion";
 
 export default function Hero() {
-  const { openCalculator } = useCalculator();
   return (
     <section id="hero" className="relative flex min-h-screen items-center justify-center px-3 pt-24 sm:px-4">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -28,16 +26,6 @@ export default function Hero() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <motion.button
-            type="button"
-            onClick={() => openCalculator()}
-            whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.45)" }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl border-2 border-indigo-400/60 bg-indigo-500/15 px-7 py-3 text-sm font-bold text-indigo-900 shadow-glass backdrop-blur-sm dark:border-indigo-400/50 dark:text-indigo-50 dark:bg-indigo-500/20"
-          >
-            Тест или ИИ (DeepSeek)
-          </motion.button>
           <motion.a
             href="/#about"
             whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.4)" }}
