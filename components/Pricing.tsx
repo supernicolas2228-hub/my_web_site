@@ -79,10 +79,9 @@ function PricingDetailModalBody({
           onClose();
           window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(svc.id) }), 0);
         }}
-        className="mt-4 w-full rounded-xl px-4 py-4 text-center text-base font-bold shadow-lg transition hover:opacity-95 active:scale-[0.99]"
-        style={{ backgroundColor: "#4f46e5", color: "#ffffff" }}
+        className="mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-4 text-center text-base font-bold text-white shadow-lg transition hover:opacity-95 active:scale-[0.99]"
       >
-        Расчёт стоимости
+        Рассчитать стоимость: ИИ или тест
       </button>
       <p className="mt-2 text-center text-xs" style={{ color: inkMuted }}>
         Быстрый тест или чат с ИИ — ориентировочная цена.
@@ -222,6 +221,16 @@ export default function Pricing() {
                     className="w-full rounded-xl border-2 border-black/20 bg-transparent px-4 py-3 text-sm font-semibold text-black transition hover:bg-black/5 dark:border-indigo-400/50 dark:text-indigo-200 dark:hover:bg-white/10"
                   >
                     Подробнее
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailId(null);
+                      window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(item.id) }), 0);
+                    }}
+                    className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2.5 text-sm font-bold text-white shadow-md ring-2 ring-indigo-500/30 transition hover:brightness-105 active:scale-[0.99] dark:from-indigo-500 dark:to-fuchsia-500 dark:ring-white/10"
+                  >
+                    Рассчитать стоимость: ИИ или тест
                   </button>
                 </div>
               </article>

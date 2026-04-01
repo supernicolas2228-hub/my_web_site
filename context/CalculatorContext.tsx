@@ -384,14 +384,8 @@ function CostCalculatorModal(props: ModalProps) {
         (isDark
           ? "border-white/20 bg-white/5 text-white/90"
           : "border-slate-200/90 bg-slate-50/90 text-slate-600"),
-      testBtn:
-        "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-md transition hover:opacity-95 sm:min-h-[3.25rem]",
-      aiBtn:
-        "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-4 py-3 font-semibold transition sm:min-h-[3.25rem] " +
-        (isDark
-          ? "border border-white/25 bg-white/10 text-white hover:bg-white/20"
-          : "border-2 border-slate-200 bg-white text-slate-900 shadow-sm hover:bg-slate-50"),
-      aiSub: "text-xs font-normal " + (isDark ? "text-white/85" : "text-slate-600"),
+      gradientChoiceBtn:
+        "inline-flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl border border-transparent bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 font-semibold text-white shadow-md transition hover:opacity-95 sm:min-h-[3.25rem] dark:shadow-indigo-950/40",
       formWrap: "mt-5 space-y-4 text-left " + (isDark ? "text-white" : "text-slate-900"),
       label: "block text-sm " + (isDark ? "text-white" : "text-slate-900"),
       cap: "mb-1 block " + (isDark ? "text-white/85" : "text-slate-600"),
@@ -444,7 +438,7 @@ function CostCalculatorModal(props: ModalProps) {
                 onFocus={() => setHoveredMode("test")}
                 onBlur={() => setHoveredMode(null)}
                 onClick={() => setCalculatorMode("test")}
-                className={ui.testBtn}
+                className={ui.gradientChoiceBtn}
               >
                 <span>Пройти тест</span>
                 <span className="text-xs font-normal text-white/90">вопросы и смета</span>
@@ -459,10 +453,10 @@ function CostCalculatorModal(props: ModalProps) {
                   onClose();
                   window.location.assign("/ai-chat");
                 }}
-                className={ui.aiBtn}
+                className={ui.gradientChoiceBtn}
               >
                 <span>Расчёт с ИИ</span>
-                <span className={ui.aiSub}>живой чат</span>
+                <span className="text-xs font-normal text-white/90">живой чат</span>
               </button>
             </div>
             <div className={ui.hint}>
