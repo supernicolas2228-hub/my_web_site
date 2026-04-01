@@ -1,8 +1,11 @@
 import Database from "better-sqlite3";
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import { generateOtpDigits } from "@/lib/fixed-otp";
+import { normalizePhone, isValidPhone } from "@/lib/phone-normalize";
 import { mkdirSync } from "fs";
 import path from "path";
+
+export { normalizePhone, isValidPhone } from "@/lib/phone-normalize";
 
 const DB_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DB_DIR, "app.db");
@@ -96,22 +99,22 @@ function getDb() {
     );
   `);
   migrateContactsTable(db);
+  migrateContactLoginChallenges(db);
   return db;
 }
 
+function migrateContactLoginChallenges(database: Database.Database) {
+  const cols = database.prepare("PRAGMA table_info(contact_login_challenges)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("last_email_resend_at")) {
+    database.exec("ALTER TABLE contact_login_challenges ADD COLUMN last_email_resend_at TEXT");
+  }
+}
+
+const CHALLENGE_EMAIL_RESEND_COOLDOWN_MS = 45_000;
+
 function hashCode(code: string) {
   return createHash("sha256").update(code).digest("hex");
-}
-
-export function normalizePhone(input: string) {
-  const digits = input.replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("8")) return `7${digits.slice(1)}`;
-  return digits;
-}
-
-export function isValidPhone(input: string) {
-  const normalized = normalizePhone(input);
-  return normalized.length === 11 && normalized.startsWith("7");
 }
 
 export function isValidEmail(input: string) {
@@ -353,6 +356,51 @@ export function startContactCabinetLoginWithKnownSmsCode(
   };
 }
 
+/** Вход в ЛК только по телефону: код из звонка, без ввода email. */
+export function startContactCabinetLoginByPhoneWithKnownSmsCode(phoneRaw: string, smsCode4: string): ContactCabinetStartResult {
+  const phone = normalizePhone(phoneRaw);
+  if (!isValidPhone(phoneRaw)) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const smsCode = smsCode4.replace(/\D/g, "").slice(0, 4);
+  if (smsCode.length !== 4) return { ok: false, error: "not_found" };
+
+  const database = getDb();
+  const row = database.prepare("SELECT id, email FROM contacts WHERE phone = ?").get(phone) as
+    | { id: number; email: string }
+    | undefined;
+  if (!row) return { ok: false, error: "not_found" };
+
+  database.prepare("DELETE FROM contact_login_challenges WHERE contact_id = ?").run(row.id);
+
+  const challengeToken = randomBytes(32).toString("hex");
+  const tokenHash = sha256(challengeToken);
+  const emailCode = generateOtpDigits(4); // поле сохраняется для совместимости схемы
+  const expiresAt = new Date(Date.now() + CONTACT_LOGIN_TTL_MS).toISOString();
+
+  database
+    .prepare(
+      `INSERT INTO contact_login_challenges (contact_id, challenge_token_hash, sms_code_hash, email_code_hash, expires_at, attempts)
+       VALUES (?, ?, ?, ?, ?, 0)`
+    )
+    .run(row.id, tokenHash, hashCabinetOtp(smsCode), hashCabinetOtp(emailCode), expiresAt);
+
+  return {
+    ok: true,
+    contactId: row.id,
+    phone,
+    email: row.email.trim().toLowerCase(),
+    challengeToken,
+    smsCode,
+    emailCode
+  };
+}
+
+function fallbackEmailForPhone(phone: string) {
+  return `user-${phone}@phone.local`;
+}
+
 export function startContactRegistrationWithKnownSmsCode(phoneRaw: string, emailRaw: string, smsCode4: string) {
   const phone = normalizePhone(phoneRaw);
   const email = emailRaw.trim().toLowerCase();
@@ -371,8 +419,66 @@ export function startContactRegistrationWithKnownSmsCode(phoneRaw: string, email
   return started;
 }
 
+/** Регистрация только по телефону: создаём тех. email, чтобы не ломать старую схему БД. */
+export function startContactPhoneOnlyRegistrationWithKnownSmsCode(phoneRaw: string, smsCode4: string) {
+  const phone = normalizePhone(phoneRaw);
+  if (!isValidPhone(phoneRaw)) {
+    return { ok: false as const, error: "invalid_input" as const };
+  }
+  const syntheticEmail = fallbackEmailForPhone(phone);
+  return startContactRegistrationWithKnownSmsCode(phone, syntheticEmail, smsCode4);
+}
+
 export function deleteContactLoginChallengesForContact(contactId: number) {
   getDb().prepare("DELETE FROM contact_login_challenges WHERE contact_id = ?").run(contactId);
+}
+
+export type RotateChallengeEmailResult =
+  | { ok: true; email: string; emailCode: string }
+  | { ok: false; error: "not_found" | "expired" | "cooldown"; retryAfterSec?: number };
+
+/** Новый код в письме + сброс попыток ввода. Cooldown между повторными отправками с клиента. */
+export function rotateContactChallengeEmailCode(challengeTokenPlain: string): RotateChallengeEmailResult {
+  const database = getDb();
+  const tokenHash = sha256(challengeTokenPlain.trim());
+  const row = database
+    .prepare(
+      `SELECT cl.id, cl.expires_at, cl.last_email_resend_at, ct.email
+       FROM contact_login_challenges cl
+       JOIN contacts ct ON ct.id = cl.contact_id
+       WHERE cl.challenge_token_hash = ?`
+    )
+    .get(tokenHash) as
+    | { id: number; expires_at: string; last_email_resend_at: string | null; email: string }
+    | undefined;
+
+  if (!row) return { ok: false, error: "not_found" };
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    database.prepare("DELETE FROM contact_login_challenges WHERE id = ?").run(row.id);
+    return { ok: false, error: "expired" };
+  }
+
+  if (row.last_email_resend_at) {
+    const elapsed = Date.now() - new Date(row.last_email_resend_at).getTime();
+    if (elapsed < CHALLENGE_EMAIL_RESEND_COOLDOWN_MS) {
+      const retryAfterSec = Math.max(
+        1,
+        Math.ceil((CHALLENGE_EMAIL_RESEND_COOLDOWN_MS - elapsed) / 1000)
+      );
+      return { ok: false, error: "cooldown", retryAfterSec };
+    }
+  }
+
+  const emailCode = generateOtpDigits(4);
+  database
+    .prepare(
+      `UPDATE contact_login_challenges
+       SET email_code_hash = ?, attempts = 0, last_email_resend_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .run(hashCabinetOtp(emailCode), row.id);
+
+  return { ok: true, email: row.email.trim().toLowerCase(), emailCode };
 }
 
 export type ContactCabinetVerifyResult =
@@ -430,6 +536,60 @@ export function completeContactCabinetLogin(
   database
     .prepare("UPDATE contacts SET phone_verified = 1, email_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
     .run(row.contact_id);
+
+  const sessionToken = randomBytes(32).toString("hex");
+  const sessionHash = sha256(sessionToken);
+  const expiresAt = new Date(Date.now() + CONTACT_SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  database
+    .prepare("INSERT INTO contact_sessions (contact_id, session_token_hash, expires_at) VALUES (?, ?, ?)")
+    .run(row.contact_id, sessionHash, expiresAt);
+
+  return { ok: true, sessionToken, expiresAt };
+}
+
+/** Подтверждение только кодом из звонка (для phone-only регистрации). */
+export function completeContactCabinetLoginByPhone(
+  challengeTokenPlain: string,
+  smsCodeRaw: string
+): ContactCabinetVerifyResult {
+  const database = getDb();
+  const tokenHash = sha256(challengeTokenPlain.trim());
+  const row = database
+    .prepare(
+      `SELECT id, contact_id, sms_code_hash, expires_at, attempts
+       FROM contact_login_challenges WHERE challenge_token_hash = ?`
+    )
+    .get(tokenHash) as
+    | {
+        id: number;
+        contact_id: number;
+        sms_code_hash: string;
+        expires_at: string;
+        attempts: number;
+      }
+    | undefined;
+
+  if (!row) return { ok: false, reason: "not_found" };
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    database.prepare("DELETE FROM contact_login_challenges WHERE id = ?").run(row.id);
+    return { ok: false, reason: "expired" };
+  }
+  if (row.attempts >= CONTACT_LOGIN_MAX_ATTEMPTS) {
+    return { ok: false, reason: "max_attempts" };
+  }
+
+  const smsTry = hashCabinetOtp(smsCodeRaw);
+  const smsBuf = Buffer.from(row.sms_code_hash, "hex");
+  const smsOk =
+    smsBuf.length === Buffer.from(smsTry, "hex").length && timingSafeEqual(smsBuf, Buffer.from(smsTry, "hex"));
+
+  if (!smsOk) {
+    database.prepare("UPDATE contact_login_challenges SET attempts = attempts + 1 WHERE id = ?").run(row.id);
+    return { ok: false, reason: "invalid_codes" };
+  }
+
+  database.prepare("DELETE FROM contact_login_challenges WHERE id = ?").run(row.id);
+  database.prepare("UPDATE contacts SET phone_verified = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(row.contact_id);
 
   const sessionToken = randomBytes(32).toString("hex");
   const sessionHash = sha256(sessionToken);

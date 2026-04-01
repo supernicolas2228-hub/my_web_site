@@ -1,3 +1,4 @@
+import { CUSTOM_QUOTE_MAX_RUB, CUSTOM_QUOTE_MIN_RUB } from "@/lib/cart-lines";
 import { getServiceById, isValidServiceId } from "@/lib/services-catalog";
 import { appendClientPurchaseIntentMessage } from "@/lib/admin-db";
 import { getContact, isPhoneVerified, normalizePhone } from "@/lib/contacts-db";
@@ -7,7 +8,16 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-type BodyItem = { serviceId: string; quantity: number };
+type BodyItemCatalog = { type?: "catalog"; serviceId: string; quantity: number };
+type BodyItemCustom = {
+  type: "custom";
+  clientLineId: string;
+  title: string;
+  amountRub: number;
+  summary?: string;
+  quantity: number;
+};
+type BodyItem = BodyItemCatalog | BodyItemCustom;
 type BodyCustomer = { phone: string; email: string; hasTelegram: boolean };
 
 function getAdminPhones() {
@@ -73,23 +83,50 @@ export async function POST(request: Request) {
   const lines: Array<{ id: string; title: string; quantity: number; unitRub: number }> = [];
 
   for (const row of items) {
-    if (!row || typeof row.serviceId !== "string" || typeof row.quantity !== "number") {
+    if (!row || typeof row.quantity !== "number") {
       return NextResponse.json({ error: "Invalid item" }, { status: 400 });
     }
     if (!Number.isInteger(row.quantity) || row.quantity < 1 || row.quantity > 99) {
       return NextResponse.json({ error: "Invalid quantity" }, { status: 400 });
     }
-    if (!isValidServiceId(row.serviceId)) {
-      return NextResponse.json({ error: `Unknown service: ${row.serviceId}` }, { status: 400 });
+
+    if (row && typeof row === "object" && "type" in row && (row as BodyItemCustom).type === "custom") {
+      const r = row as BodyItemCustom;
+      const id = typeof r.clientLineId === "string" ? r.clientLineId.trim().slice(0, 80) : "";
+      const title = typeof r.title === "string" ? r.title.trim().slice(0, 200) : "";
+      const amountRub = Math.round(Number(r.amountRub));
+      if (!id || !title) {
+        return NextResponse.json({ error: "Invalid custom line" }, { status: 400 });
+      }
+      if (!Number.isInteger(amountRub) || amountRub < CUSTOM_QUOTE_MIN_RUB || amountRub > CUSTOM_QUOTE_MAX_RUB) {
+        return NextResponse.json({ error: "Invalid custom amountRub" }, { status: 400 });
+      }
+      const lineTotal = amountRub * r.quantity;
+      totalKopecks += lineTotal * 100;
+      lines.push({
+        id: `ai:${id}`,
+        title: `ИИ-заказ: ${title}`,
+        quantity: r.quantity,
+        unitRub: amountRub
+      });
+      continue;
     }
-    const svc = getServiceById(row.serviceId);
+
+    const catalogRow = row as BodyItemCatalog;
+    if (typeof catalogRow.serviceId !== "string") {
+      return NextResponse.json({ error: "Invalid item" }, { status: 400 });
+    }
+    if (!isValidServiceId(catalogRow.serviceId)) {
+      return NextResponse.json({ error: `Unknown service: ${catalogRow.serviceId}` }, { status: 400 });
+    }
+    const svc = getServiceById(catalogRow.serviceId);
     if (!svc) continue;
-    const lineTotal = svc.priceRub * row.quantity;
+    const lineTotal = svc.priceRub * catalogRow.quantity;
     totalKopecks += lineTotal * 100;
     lines.push({
       id: svc.id,
       title: svc.title,
-      quantity: row.quantity,
+      quantity: catalogRow.quantity,
       unitRub: svc.priceRub
     });
   }

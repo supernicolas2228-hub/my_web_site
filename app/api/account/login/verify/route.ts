@@ -1,11 +1,11 @@
 import { CONTACT_COOKIE } from "@/lib/contact-auth";
-import { completeContactCabinetLogin } from "@/lib/contacts-db";
+import { completeContactCabinetLoginByPhone } from "@/lib/contacts-db";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  let body: { challengeToken?: string; smsCode?: string; emailCode?: string };
+  let body: { challengeToken?: string; smsCode?: string };
   try {
     body = await request.json();
   } catch {
@@ -14,18 +14,17 @@ export async function POST(request: Request) {
 
   const challengeToken = (body.challengeToken || "").trim();
   const smsCode = (body.smsCode || "").trim();
-  const emailCode = (body.emailCode || "").trim();
-  if (!challengeToken || !smsCode || !emailCode) {
-    return NextResponse.json({ error: "Укажите токен и оба кода" }, { status: 400 });
+  if (!challengeToken || !smsCode) {
+    return NextResponse.json({ error: "Укажите challengeToken и код из звонка" }, { status: 400 });
   }
 
-  const result = completeContactCabinetLogin(challengeToken, smsCode, emailCode);
+  const result = completeContactCabinetLoginByPhone(challengeToken, smsCode);
   if (!result.ok) {
     const map = {
       not_found: "Сессия входа не найдена. Запросите коды снова",
       expired: "Коды истекли. Запросите вход заново",
       max_attempts: "Слишком много попыток. Запросите вход заново",
-      invalid_codes: "Неверный код из SMS или из письма"
+      invalid_codes: "Неверный код из звонка"
     } as const;
     return NextResponse.json({ error: map[result.reason] }, { status: 401 });
   }

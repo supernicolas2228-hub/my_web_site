@@ -1,5 +1,6 @@
 "use client";
 
+import { formatRuPhoneMask, isValidPhone } from "@/lib/phone-normalize";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
@@ -11,12 +12,11 @@ export default function AdminLoginForm() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<"password" | "2fa">("password");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [challengeToken, setChallengeToken] = useState<string | null>(null);
-  const [emailHint, setEmailHint] = useState<string | null>(null);
   const [twoFactorHint, setTwoFactorHint] = useState<string | null>(null);
-  const [emailCode, setEmailCode] = useState("");
   const [smsCode, setSmsCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -25,12 +25,7 @@ export default function AdminLoginForm() {
     try {
       const raw = sessionStorage.getItem(ADMIN_2FA_STORAGE);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as {
-        challengeToken?: string;
-        emailHint?: string;
-        twoFactorHint?: string;
-        savedAt?: number;
-      };
+      const parsed = JSON.parse(raw) as { challengeToken?: string; twoFactorHint?: string; savedAt?: number };
       if (!parsed.challengeToken || typeof parsed.savedAt !== "number") {
         sessionStorage.removeItem(ADMIN_2FA_STORAGE);
         return;
@@ -40,7 +35,6 @@ export default function AdminLoginForm() {
         return;
       }
       setChallengeToken(parsed.challengeToken);
-      setEmailHint(parsed.emailHint ?? null);
       setTwoFactorHint(parsed.twoFactorHint ?? null);
       setStep("2fa");
     } catch {
@@ -52,9 +46,7 @@ export default function AdminLoginForm() {
     sessionStorage.removeItem(ADMIN_2FA_STORAGE);
     setStep("password");
     setChallengeToken(null);
-    setEmailHint(null);
     setTwoFactorHint(null);
-    setEmailCode("");
     setSmsCode("");
     setError(null);
   };
@@ -63,33 +55,29 @@ export default function AdminLoginForm() {
     event.preventDefault();
     setError(null);
     setLoading(true);
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 12000);
       const res = await fetch("/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password, phone }),
+        signal: controller.signal
       });
-      const data = (await res.json()) as {
-        error?: string;
-        requires2fa?: boolean;
-        challengeToken?: string;
-        emailHint?: string;
-        twoFactorHint?: string;
-      };
+      const data = (await res.json()) as { error?: string; requires2fa?: boolean; challengeToken?: string; twoFactorHint?: string };
       if (!res.ok) {
         setError(data.error || "Ошибка входа");
         return;
       }
       if (data.requires2fa && data.challengeToken) {
         setChallengeToken(data.challengeToken);
-        setEmailHint(data.emailHint || null);
         setTwoFactorHint(data.twoFactorHint || null);
         try {
           sessionStorage.setItem(
             ADMIN_2FA_STORAGE,
             JSON.stringify({
               challengeToken: data.challengeToken,
-              emailHint: data.emailHint ?? null,
               twoFactorHint: data.twoFactorHint ?? null,
               savedAt: Date.now()
             })
@@ -102,8 +90,9 @@ export default function AdminLoginForm() {
       }
       setError("Неожиданный ответ сервера");
     } catch {
-      setError("Ошибка сети");
+      setError("Сервис звонков долго отвечает. Попробуйте еще раз.");
     } finally {
+      if (timeout) clearTimeout(timeout);
       setLoading(false);
     }
   };
@@ -111,7 +100,7 @@ export default function AdminLoginForm() {
   const onSubmit2fa = async (event: FormEvent) => {
     event.preventDefault();
     if (!challengeToken) {
-      setError("Сессия подтверждения сброшена (например, после обновления страницы). Введите пароль ещё раз.");
+      setError("Сессия подтверждения сброшена. Введите email, пароль и телефон заново.");
       return;
     }
     setError(null);
@@ -120,7 +109,7 @@ export default function AdminLoginForm() {
       const res = await fetch("/api/admin/auth/verify-2fa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ challengeToken, emailCode, smsCode })
+        body: JSON.stringify({ challengeToken, smsCode })
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
@@ -149,9 +138,7 @@ export default function AdminLoginForm() {
           {step === "password" ? (
             <>
               <h1 className="text-2xl font-bold">Вход в админку</h1>
-              <p className="mt-2 text-sm opacity-75">
-                Сначала email и пароль администратора, затем коды на почту и в SMS (двухфакторный вход).
-              </p>
+              <p className="mt-2 text-sm opacity-75">Введите email, пароль и телефон. Подтверждение — только кодом из звонка.</p>
               <form onSubmit={onSubmitPassword} className="mt-6 space-y-4">
                 <label className="block text-sm">
                   <span className="mb-1 block opacity-80">Email</span>
@@ -161,6 +148,19 @@ export default function AdminLoginForm() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     autoComplete="username"
+                    className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block opacity-80">Телефон</span>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(formatRuPhoneMask(e.target.value))}
+                    required
+                    placeholder="+7 (999) 123-45-67"
                     className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
                   />
                 </label>
@@ -184,20 +184,11 @@ export default function AdminLoginForm() {
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs opacity-80">
-                    <input
-                      type="checkbox"
-                      checked={showPassword}
-                      onChange={(e) => setShowPassword(e.target.checked)}
-                      className="rounded border-white/30"
-                    />
-                    Показать пароль
-                  </label>
                 </div>
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !isValidPhone(phone)}
                   className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-5 py-3 font-semibold text-white disabled:opacity-60"
                 >
                   {loading ? "Проверяем…" : "Далее"}
@@ -211,29 +202,12 @@ export default function AdminLoginForm() {
                 {twoFactorHint ? (
                   <span className="font-medium text-amber-200/90">{twoFactorHint}</span>
                 ) : (
-                  <>
-                    Введите 4-значные коды из письма на{" "}
-                    <span className="font-medium opacity-90">{emailHint || "ваш email"}</span> и из SMS на номер,
-                    который задан для входа в админку (или первый номер из списка уведомлений о заказах).
-                  </>
+                  <>Введите последние 4 цифры номера, с которого поступит звонок.</>
                 )}
               </p>
               <form onSubmit={onSubmit2fa} className="mt-6 space-y-4">
                 <label className="block text-sm">
-                  <span className="mb-1 block opacity-80">Код из email</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={emailCode}
-                    onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    required
-                    placeholder="000000"
-                    className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 font-mono text-lg tracking-widest outline-none focus:border-indigo-400"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block opacity-80">Код из SMS</span>
+                  <span className="mb-1 block opacity-80">Код из звонка</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -241,14 +215,14 @@ export default function AdminLoginForm() {
                     value={smsCode}
                     onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
                     required
-                    placeholder="000000"
+                    placeholder="0000"
                     className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 font-mono text-lg tracking-widest outline-none focus:border-indigo-400"
                   />
                 </label>
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   type="submit"
-                  disabled={loading || emailCode.length < 4 || smsCode.length < 4}
+                  disabled={loading || smsCode.length < 4}
                   className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-5 py-3 font-semibold text-white disabled:opacity-60"
                 >
                   {loading ? "Входим…" : "Войти"}
@@ -258,7 +232,7 @@ export default function AdminLoginForm() {
                   onClick={logoutToStep1}
                   className="w-full rounded-lg border border-white/25 py-2 text-sm opacity-80 hover:bg-white/10"
                 >
-                  Назад к паролю
+                  Назад
                 </button>
               </form>
             </>

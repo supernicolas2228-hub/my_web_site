@@ -1,4 +1,10 @@
-import { isValidEmail, isValidPhone, requestVerificationCodeWithKnownCode, upsertContact } from "@/lib/contacts-db";
+import {
+  isValidEmail,
+  isValidPhone,
+  normalizePhone,
+  requestVerificationCodeWithKnownCode,
+  upsertContact
+} from "@/lib/contacts-db";
 import { requestSmsRuCallCode } from "@/lib/sms-sender";
 import { NextResponse } from "next/server";
 
@@ -27,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   upsertContact(phone, email);
-  const call = await requestSmsRuCallCode(phone.replace(/\D/g, ""), "-1");
+  const call = await requestSmsRuCallCode(normalizePhone(phone), "-1");
   if (!call.ok) {
     return NextResponse.json({ error: `Звонок: ${call.error}` }, { status: 503 });
   }

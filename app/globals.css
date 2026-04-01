@@ -131,17 +131,13 @@ html:not(.dark) #services .service-icon * {
   (Переключатель next-themes + Tailwind darkMode: "class")
 */
 html:not(.dark) #pricing,
-html:not(.dark) #pricing *,
-html:not(.dark) #advantages,
-html:not(.dark) #advantages * {
-  color: #000000 !important;
+html:not(.dark) #advantages {
+  color: #000000;
 }
 
 .dark #pricing,
-.dark #pricing *,
-.dark #advantages,
-.dark #advantages * {
-  color: #ffffff !important;
+.dark #advantages {
+  color: #ffffff;
 }
 
 /* Страница /about — тот же контраст текста, что и у блока #about */

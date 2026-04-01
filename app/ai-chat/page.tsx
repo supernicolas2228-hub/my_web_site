@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
 import { useState } from "react";
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
 
+function isPayCommand(text: string): boolean {
+  const t = text.trim().toLowerCase().replace(/\s+/g, " ");
+  if (t === "оплатить") return true;
+  return /^оплатить[.!?…]*$/i.test(text.trim());
+}
+
 export default function AiChatPage() {
+  const { addCustomQuote } = useCart();
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: "Привет! Я AI-консультант TrueWeb. Опишите проект, и я помогу с оценкой сроков и стоимости."
+      text: "Здравствуйте! 👋 Я ИИ-консультант TrueWeb на базе DeepSeek — помогаю с расчётом стоимости сайта или бота 💰\n\nНапишите, что вы хотите на сайте (или какой нужен Telegram-бот), и я подскажу ориентировочную цену в рублях ✨ Можно коротко: ниша, количество страниц, нужен ли магазин, формы, бот и т.д.\n\nКогда согласуем сумму, для оплаты напишите в чат слово «оплатить» — в корзину добавится позиция с этой суммой 🛒"
     }
   ]);
 
@@ -23,6 +31,54 @@ export default function AiChatPage() {
     setMessages(next);
     setInput("");
     setLoading(true);
+
+    if (isPayCommand(prompt)) {
+      try {
+        const res = await fetch("/api/ai/parse-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: next })
+        });
+        const data = (await res.json()) as {
+          title?: string;
+          amountRub?: number;
+          summary?: string;
+          error?: string;
+        };
+        const rub = data.amountRub;
+        const quoteTitle = typeof data.title === "string" ? data.title.trim() : "";
+        if (!res.ok || typeof rub !== "number" || !quoteTitle) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              text: data.error || "Не удалось добавить оплату в корзину. Уточните в переписке итоговую сумму и снова напишите «оплатить»."
+            }
+          ]);
+          return;
+        }
+        addCustomQuote({
+          title: quoteTitle,
+          amountRub: rub,
+          summary: data.summary || "Заказ из ИИ-чата TrueWeb."
+        });
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            text: `Готово! 🛒 В корзину добавлено: «${quoteTitle}» — ${rub.toLocaleString("ru-RU")} ₽.\n\nОткройте корзину и нажмите «Оплатить через ЮKassa» 💳 Если сумма не та — напишите в чат уточнение и снова «оплатить».`
+          }
+        ]);
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: "Ошибка сети при добавлении в корзину. Попробуйте ещё раз." }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const res = await fetch("/api/ai/deepseek", {
@@ -50,21 +106,29 @@ export default function AiChatPage() {
     <main className="relative min-h-screen px-3 pb-10 pt-24 sm:px-4">
       <div className="site-container max-w-4xl">
         <div className="glass-card rounded-2xl p-5 sm:p-6">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold">AI-чат по расчёту сайта</h1>
-            <Link
-              href="/"
-              className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-85 transition hover:bg-white/10"
-            >
-              На главную
-            </Link>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h1 className="text-2xl font-bold">Расчёт с ИИ (DeepSeek)</h1>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/cart"
+                className="rounded-lg border border-indigo-400/50 bg-indigo-500/15 px-3 py-1.5 text-sm font-semibold opacity-95 transition hover:bg-indigo-500/25"
+              >
+                Корзина
+              </Link>
+              <Link
+                href="/"
+                className="rounded-lg border border-white/25 px-3 py-1.5 text-sm opacity-85 transition hover:bg-white/10"
+              >
+                На главную
+              </Link>
+            </div>
           </div>
 
           <div className="h-[55vh] space-y-3 overflow-y-auto rounded-xl border border-white/20 bg-white/5 p-3">
             {messages.map((m, i) => (
               <div
                 key={i}
-                className={`max-w-[92%] rounded-xl px-3 py-2 text-sm sm:max-w-[85%] ${
+                className={`max-w-[92%] whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-sm sm:max-w-[85%] ${
                   m.role === "user"
                     ? "ml-auto bg-indigo-500/30 text-slate-900 dark:text-white"
                     : "mr-auto bg-white/15 text-slate-900 dark:text-white"
@@ -81,9 +145,12 @@ export default function AiChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") void send();
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
+                }
               }}
-              placeholder="Например: нужен сайт для клиники на 10 страниц..."
+              placeholder="Опишите проект или напишите «оплатить» после согласования суммы"
               className="w-full rounded-xl border border-white/25 bg-transparent px-3 py-2 outline-none focus:border-indigo-400"
             />
             <button
@@ -96,11 +163,11 @@ export default function AiChatPage() {
             </button>
           </div>
           <p className="mt-2 text-xs opacity-70">
-            После того как вы дадите токен DeepSeek, чат будет отвечать реальными ответами модели.
+            Ответы — DeepSeek с учётом цен минимальных пакетов TrueWeb. Слово «оплатить» добавляет в корзину позицию по
+            переписке; банк списывает сумму на ЮKassa. Точная смета по договору — после ТЗ.
           </p>
         </div>
       </div>
     </main>
   );
 }
-

@@ -8,10 +8,29 @@ from pathlib import Path
 
 import paramiko
 
-HOST = "138.124.90.218"
-USER = "root"
-PWD = "1kRPeZQ4FbQVkZ1I"
 PROJECT = Path(__file__).resolve().parent.parent
+
+
+def _load_local_deploy_env() -> None:
+    """Подхватывает TRUWEB_* из .deploy.env в корне проекта (файл в .gitignore)."""
+    path = PROJECT / ".deploy.env"
+    if not path.is_file():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key, val = key.strip(), val.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+
+_load_local_deploy_env()
+
+HOST = os.environ.get("TRUWEB_VPS_HOST", "138.124.90.218")
+USER = os.environ.get("TRUWEB_VPS_USER", "root")
+PWD = os.environ.get("TRUWEB_VPS_SSH_PASSWORD", "")
 REMOTE_PATH = "/var/www/business-card-site"
 REMOTE_ARCHIVE = "/tmp/truweb-deploy.tar.gz"
 # data/ — SQLite на сервере; не включать, иначе локальный app.db затирает продакшен-данные (клиенты, заказы).
@@ -19,6 +38,12 @@ EXCLUDE = {"node_modules", ".next", ".git", "data"}
 
 
 def main() -> None:
+    if not PWD.strip():
+        print(
+            "Задайте TRUWEB_VPS_SSH_PASSWORD в переменной окружения или в файле .deploy.env в корне проекта (см. .deploy.env.example).",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
     fd, tar_path = tempfile.mkstemp(suffix=".tar.gz", prefix="truweb-deploy-")
     os.close(fd)
     try:

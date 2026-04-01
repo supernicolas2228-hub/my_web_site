@@ -1,4 +1,91 @@
+import Database from "better-sqlite3";
+import { mkdirSync } from "fs";
+import path from "path";
+
 type SmsSendResult = { ok: true } | { ok: false; error: string };
+
+const DB_DIR = path.join(process.cwd(), "data");
+const DB_PATH = path.join(DB_DIR, "app.db");
+
+let db: Database.Database | null = null;
+
+function getDb() {
+  if (db) return db;
+  mkdirSync(DB_DIR, { recursive: true });
+  db = new Database(DB_PATH);
+  db.pragma("journal_mode = WAL");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS smsru_call_limits (
+      phone TEXT NOT NULL,
+      day_key TEXT NOT NULL,
+      calls_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (phone, day_key)
+    );
+    CREATE TABLE IF NOT EXISTS smsru_call_limits_global (
+      day_key TEXT PRIMARY KEY,
+      calls_count INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  return db;
+}
+
+function currentDayKey() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function getDailyCallLimit() {
+  const parsed = Number(process.env.SMS_RU_CALLS_PER_DAY || "10");
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 10;
+}
+
+function takeCallSlot(phone: string): { ok: true } | { ok: false; error: string } {
+  const database = getDb();
+  const day = currentDayKey();
+  const limit = getDailyCallLimit();
+  const globalRow = database
+    .prepare("SELECT calls_count FROM smsru_call_limits_global WHERE day_key = ?")
+    .get(day) as { calls_count: number } | undefined;
+  const globalCount = globalRow?.calls_count ?? 0;
+  if (globalCount >= limit) {
+    return { ok: false, error: `Суточный лимит звонков исчерпан: ${limit}` };
+  }
+
+  const row = database
+    .prepare("SELECT calls_count FROM smsru_call_limits WHERE phone = ? AND day_key = ?")
+    .get(phone, day) as { calls_count: number } | undefined;
+  const count = row?.calls_count ?? 0;
+  if (count >= limit) {
+    return { ok: false, error: `Лимит звонков исчерпан: ${limit} в сутки на номер` };
+  }
+
+  if (row) {
+    database
+      .prepare("UPDATE smsru_call_limits SET calls_count = calls_count + 1, updated_at = CURRENT_TIMESTAMP WHERE phone = ? AND day_key = ?")
+      .run(phone, day);
+  } else {
+    database
+      .prepare("INSERT INTO smsru_call_limits (phone, day_key, calls_count) VALUES (?, ?, 1)")
+      .run(phone, day);
+  }
+
+  if (globalRow) {
+    database
+      .prepare("UPDATE smsru_call_limits_global SET calls_count = calls_count + 1, updated_at = CURRENT_TIMESTAMP WHERE day_key = ?")
+      .run(day);
+  } else {
+    database
+      .prepare("INSERT INTO smsru_call_limits_global (day_key, calls_count) VALUES (?, 1)")
+      .run(day);
+  }
+
+  return { ok: true };
+}
 
 /** Для 2FA в production нужен реальный провайдер (не mock). */
 export function isSmsProviderReal(): boolean {
@@ -45,6 +132,8 @@ async function sendViaSmsRu(phone: string, text: string): Promise<SmsSendResult>
 export async function requestSmsRuCallCode(phone: string, ip: string): Promise<{ ok: true; code: string } | { ok: false; error: string }> {
   const apiId = (process.env.SMS_RU_API_ID || "").trim();
   if (!apiId) return { ok: false, error: "SMS_RU_API_ID is not set" };
+  const slot = takeCallSlot(phone);
+  if (!slot.ok) return slot;
 
   try {
     const params = new URLSearchParams();
@@ -55,18 +144,31 @@ export async function requestSmsRuCallCode(phone: string, ip: string): Promise<{
     const res = await fetch("https://sms.ru/code/call", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: params.toString()
+      body: params.toString(),
+      signal: AbortSignal.timeout(12_000)
     });
 
     const data = (await res.json()) as { status?: string; code?: string; status_text?: string };
     if (!res.ok) return { ok: false, error: `SMS.ru HTTP ${res.status}` };
     if (!data || data.status !== "OK" || !data.code) {
-      return { ok: false, error: data?.status_text || "SMS.ru call failed" };
+      const raw = (data?.status_text || "SMS.ru call failed").trim();
+      const lower = raw.toLowerCase();
+      if (lower.includes("слишком много звонков") || lower.includes("ограничение")) {
+        return {
+          ok: false,
+          error:
+            "Лимит звонков у SMS.ru исчерпан (это внешний лимит провайдера). Увеличьте его в SMS.ru: Настройки -> Технические настройки, затем повторите."
+        };
+      }
+      return { ok: false, error: raw };
     }
     const digits = String(data.code).replace(/\D/g, "").slice(0, 4);
     if (digits.length !== 4) return { ok: false, error: "SMS.ru returned invalid code" };
     return { ok: true, code: digits };
   } catch (e) {
+    if (e instanceof Error && (e.name === "AbortError" || e.message.includes("aborted"))) {
+      return { ok: false, error: "SMS.ru: таймаут ответа (проверьте сеть сервера)" };
+    }
     return { ok: false, error: e instanceof Error ? e.message : "SMS.ru call request failed" };
   }
 }

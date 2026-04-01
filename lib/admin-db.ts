@@ -12,7 +12,7 @@ type AdminUserRow = { id: number; email: string; password_hash: string };
 
 export type AdminPasswordCheckResult =
   | { ok: true; adminUserId: number; email: string; phone: string }
-  | { ok: false; reason: "unknown_email" | "wrong_password" };
+  | { ok: false; reason: "unknown_email" | "wrong_password" | "invalid_phone" | "phone_mismatch" };
 
 export type Admin2faCompleteResult =
   | { ok: true; token: string; adminUserId: number; expiresAt: string; email: string }
@@ -120,8 +120,19 @@ function getDb() {
     ON admin_login_challenges (expires_at);
   `);
   migrateAdminUsersTable(db);
+  migrateAdminLoginChallenges(db);
   return db;
 }
+
+function migrateAdminLoginChallenges(database: Database.Database) {
+  const cols = database.prepare("PRAGMA table_info(admin_login_challenges)").all() as { name: string }[];
+  const names = new Set(cols.map((c) => c.name));
+  if (!names.has("last_email_resend_at")) {
+    database.exec("ALTER TABLE admin_login_challenges ADD COLUMN last_email_resend_at TEXT");
+  }
+}
+
+const ADMIN_2FA_EMAIL_RESEND_COOLDOWN_MS = 45_000;
 
 function sha256(input: string) {
   return createHash("sha256").update(input).digest("hex");
@@ -185,24 +196,82 @@ export function ensureAdminBootstrap() {
   }
 }
 
-export function adminVerifyPasswordFor2fa(emailRaw: string, password: string): AdminPasswordCheckResult {
+export function adminVerifyPasswordFor2fa(emailRaw: string, password: string, phoneRaw: string): AdminPasswordCheckResult {
   ensureAdminBootstrap();
   const email = emailRaw.trim().toLowerCase();
+  const phoneInput = normalizePhone(phoneRaw.trim());
+  if (phoneInput.length !== 11 || !phoneInput.startsWith("7")) {
+    return { ok: false as const, reason: "invalid_phone" };
+  }
   const database = getDb();
   const row = database
     .prepare("SELECT id, email, password_hash, phone FROM admin_users WHERE email = ?")
     .get(email) as (AdminUserRow & { phone: string }) | undefined;
   if (!row) return { ok: false as const, reason: "unknown_email" };
   if (!verifyPassword(password, row.password_hash)) return { ok: false as const, reason: "wrong_password" };
-  return { ok: true as const, adminUserId: row.id, email: row.email, phone: row.phone || "" };
+  const envPhone = resolveAdminPhoneFromEnv();
+  const expectedPhone = normalizePhone((row.phone || "").trim()) || envPhone;
+  if (expectedPhone && expectedPhone !== phoneInput) {
+    return { ok: false as const, reason: "phone_mismatch" };
+  }
+  return { ok: true as const, adminUserId: row.id, email: row.email, phone: expectedPhone || phoneInput };
 }
 
 export function deleteAdmin2faChallengesForUser(adminUserId: number) {
   getDb().prepare("DELETE FROM admin_login_challenges WHERE admin_user_id = ?").run(adminUserId);
 }
 
+export type RotateAdminChallengeEmailResult =
+  | { ok: true; email: string; emailCode: string }
+  | { ok: false; error: "not_found" | "expired" | "cooldown"; retryAfterSec?: number };
+
+/** Новый код в письме для 2FA админки. */
+export function rotateAdminChallengeEmailCode(challengeTokenPlain: string): RotateAdminChallengeEmailResult {
+  const database = getDb();
+  const tokenNorm = challengeTokenPlain.trim().toLowerCase();
+  const tokenHash = sha256(tokenNorm);
+  const row = database
+    .prepare(
+      `SELECT cl.id, cl.expires_at, cl.last_email_resend_at, u.email
+       FROM admin_login_challenges cl
+       JOIN admin_users u ON u.id = cl.admin_user_id
+       WHERE cl.challenge_token_hash = ?`
+    )
+    .get(tokenHash) as
+    | { id: number; expires_at: string; last_email_resend_at: string | null; email: string }
+    | undefined;
+
+  if (!row) return { ok: false, error: "not_found" };
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    database.prepare("DELETE FROM admin_login_challenges WHERE id = ?").run(row.id);
+    return { ok: false, error: "expired" };
+  }
+
+  if (row.last_email_resend_at) {
+    const elapsed = Date.now() - new Date(row.last_email_resend_at).getTime();
+    if (elapsed < ADMIN_2FA_EMAIL_RESEND_COOLDOWN_MS) {
+      const retryAfterSec = Math.max(
+        1,
+        Math.ceil((ADMIN_2FA_EMAIL_RESEND_COOLDOWN_MS - elapsed) / 1000)
+      );
+      return { ok: false, error: "cooldown", retryAfterSec };
+    }
+  }
+
+  const emailCode = generateOtpDigits(4);
+  database
+    .prepare(
+      `UPDATE admin_login_challenges
+       SET email_code_hash = ?, attempts = 0, last_email_resend_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    )
+    .run(hashOtp(emailCode), row.id);
+
+  return { ok: true, email: row.email.trim().toLowerCase(), emailCode };
+}
+
 /**
- * Не вызывать SMTP/SMS при входе в админку (иначе при ошибке отправки челлендж сбрасывается).
+ * Не вызывать SMTP/SMS при входе в админку (для отладки / фиксированный OTP).
  * Включается из .env или автоматически при USE_FIXED_OTP_EVERYWHERE в lib/fixed-otp.ts.
  */
 export function isAdmin2faSkipDelivery(): boolean {
@@ -248,21 +317,20 @@ export function issueAdmin2faChallengeWithCodes(
   return { challengeToken, emailCode, smsCode };
 }
 
-export function completeAdmin2faLogin(challengeToken: string, emailCodeRaw: string, smsCodeRaw: string): Admin2faCompleteResult {
+export function completeAdmin2faLoginByPhone(challengeToken: string, smsCodeRaw: string): Admin2faCompleteResult {
   ensureAdminBootstrap();
   const database = getDb();
   const tokenNorm = challengeToken.trim().toLowerCase();
   const tokenHash = sha256(tokenNorm);
   const row = database
     .prepare(
-      `SELECT id, admin_user_id, email_code_hash, sms_code_hash, expires_at, attempts
+      `SELECT id, admin_user_id, sms_code_hash, expires_at, attempts
        FROM admin_login_challenges WHERE challenge_token_hash = ?`
     )
     .get(tokenHash) as
     | {
         id: number;
         admin_user_id: number;
-        email_code_hash: string;
         sms_code_hash: string;
         expires_at: string;
         attempts: number;
@@ -278,31 +346,19 @@ export function completeAdmin2faLogin(challengeToken: string, emailCodeRaw: stri
     return { ok: false as const, reason: "max_attempts" };
   }
 
-  const emailDigits = emailCodeRaw.replace(/\D/g, "");
   const smsDigits = smsCodeRaw.replace(/\D/g, "");
-  let emailOk = false;
   let smsOk = false;
 
-  if (
-    USE_FIXED_OTP_EVERYWHERE &&
-    emailDigits === FIXED_OTP_DIGITS &&
-    smsDigits === FIXED_OTP_DIGITS
-  ) {
-    emailOk = true;
+  if (USE_FIXED_OTP_EVERYWHERE && smsDigits === FIXED_OTP_DIGITS) {
     smsOk = true;
   } else {
-    const emailTry = hashOtp(emailCodeRaw);
     const smsTry = hashOtp(smsCodeRaw);
-    const emailBuf = Buffer.from(row.email_code_hash, "hex");
     const smsBuf = Buffer.from(row.sms_code_hash, "hex");
-    emailOk =
-      emailBuf.length === Buffer.from(emailTry, "hex").length &&
-      timingSafeEqual(emailBuf, Buffer.from(emailTry, "hex"));
     smsOk =
       smsBuf.length === Buffer.from(smsTry, "hex").length && timingSafeEqual(smsBuf, Buffer.from(smsTry, "hex"));
   }
 
-  if (!emailOk || !smsOk) {
+  if (!smsOk) {
     database.prepare("UPDATE admin_login_challenges SET attempts = attempts + 1 WHERE id = ?").run(row.id);
     return { ok: false as const, reason: "invalid_codes" };
   }

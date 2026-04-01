@@ -11,7 +11,6 @@ import SignupPrompt from "@/components/SignupPrompt";
 export default function HomePage() {
   return (
     <>
-      <SignupPrompt />
       <Header />
       <main>
         <Hero />
@@ -22,6 +21,8 @@ export default function HomePage() {
         <Contacts />
       </main>
       <Footer />
+      {/* После контента: сначала видны услуги и кнопки, предложение аккаунта — позже и ниже по слою */}
+      <SignupPrompt />
     </>
   );
 }

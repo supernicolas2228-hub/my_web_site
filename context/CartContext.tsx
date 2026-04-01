@@ -1,33 +1,46 @@
 "use client";
 
 import type { ServiceId } from "@/lib/services-catalog";
-import { isValidServiceId, SERVICES_CATALOG } from "@/lib/services-catalog";
+import { SERVICES_CATALOG } from "@/lib/services-catalog";
+import type { CartLine, CustomCartLine } from "@/lib/cart-lines";
+import { CUSTOM_QUOTE_MAX_RUB, CUSTOM_QUOTE_MIN_RUB, lineStableKey, parseCartLine } from "@/lib/cart-lines";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 const STORAGE_KEY = "truweb-cart-v1";
 
-export type CartLine = {
-  serviceId: ServiceId;
-  quantity: number;
-};
+export type ResolvedCartLine =
+  | {
+      kind: "catalog";
+      lineKey: string;
+      serviceId: ServiceId;
+      title: string;
+      unitPriceRub: number;
+      quantity: number;
+      lineTotalRub: number;
+      summary?: string;
+    }
+  | {
+      kind: "custom";
+      lineKey: string;
+      clientLineId: string;
+      title: string;
+      summary: string;
+      unitPriceRub: number;
+      quantity: number;
+      lineTotalRub: number;
+    };
 
 type CartContextValue = {
   lines: CartLine[];
   addLine: (serviceId: ServiceId) => void;
-  setQuantity: (serviceId: ServiceId, quantity: number) => void;
-  removeLine: (serviceId: ServiceId) => void;
+  addCustomQuote: (payload: { title: string; amountRub: number; summary: string }) => void;
+  setQuantity: (lineKey: string, quantity: number) => void;
+  removeLine: (lineKey: string) => void;
   clearCart: () => void;
   totalRub: number;
   totalCount: number;
-  resolvedLines: Array<{
-    serviceId: ServiceId;
-    title: string;
-    unitPriceRub: number;
-    quantity: number;
-    lineTotalRub: number;
-  }>;
-  /** После добавления — показать выбор */
+  resolvedLines: ResolvedCartLine[];
   choiceModal: { open: boolean; title: string };
   closeChoiceModal: () => void;
 };
@@ -41,15 +54,12 @@ function loadFromStorage(): CartLine[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (x): x is CartLine =>
-        x &&
-        typeof x === "object" &&
-        typeof (x as CartLine).serviceId === "string" &&
-        isValidServiceId((x as CartLine).serviceId) &&
-        typeof (x as CartLine).quantity === "number" &&
-        (x as CartLine).quantity > 0
-    );
+    const out: CartLine[] = [];
+    for (const item of parsed) {
+      const line = parseCartLine(item);
+      if (line) out.push(line);
+    }
+    return out;
   } catch {
     return [];
   }
@@ -72,19 +82,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const resolvedLines = useMemo(() => {
     const map = Object.fromEntries(SERVICES_CATALOG.map((s) => [s.id, s]));
-    return lines
-      .map((line) => {
+    const result: ResolvedCartLine[] = [];
+    for (const line of lines) {
+      if (line.kind === "catalog") {
         const s = map[line.serviceId];
-        if (!s) return null;
-        return {
+        if (!s) continue;
+        result.push({
+          kind: "catalog",
+          lineKey: lineStableKey(line),
           serviceId: line.serviceId,
           title: s.title,
           unitPriceRub: s.priceRub,
           quantity: line.quantity,
           lineTotalRub: s.priceRub * line.quantity
-        };
-      })
-      .filter(Boolean) as CartContextValue["resolvedLines"];
+        });
+      } else {
+        result.push({
+          kind: "custom",
+          lineKey: lineStableKey(line),
+          clientLineId: line.clientLineId,
+          title: line.title,
+          summary: line.summary,
+          unitPriceRub: line.amountRub,
+          quantity: line.quantity,
+          lineTotalRub: line.amountRub * line.quantity
+        });
+      }
+    }
+    return result;
   }, [lines]);
 
   const totalRub = useMemo(() => resolvedLines.reduce((sum, l) => sum + l.lineTotalRub, 0), [resolvedLines]);
@@ -93,24 +118,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addLine = useCallback((serviceId: ServiceId) => {
     const title = SERVICES_CATALOG.find((s) => s.id === serviceId)?.title ?? "Услуга";
     setLines((prev) => {
-      const idx = prev.findIndex((l) => l.serviceId === serviceId);
-      if (idx === -1) return [...prev, { serviceId, quantity: 1 }];
+      const idx = prev.findIndex((l) => l.kind === "catalog" && l.serviceId === serviceId);
+      if (idx === -1) return [...prev, { kind: "catalog", serviceId, quantity: 1 }];
       const next = [...prev];
-      next[idx] = { ...next[idx], quantity: next[idx].quantity + 1 };
+      const cur = next[idx] as Extract<CartLine, { kind: "catalog" }>;
+      next[idx] = { ...cur, quantity: cur.quantity + 1 };
       return next;
     });
     setChoiceModal({ open: true, title });
   }, []);
 
-  const setQuantity = useCallback((serviceId: ServiceId, quantity: number) => {
+  const addCustomQuote = useCallback((payload: { title: string; amountRub: number; summary: string }) => {
+    const amountRub = Math.round(payload.amountRub);
+    if (amountRub < CUSTOM_QUOTE_MIN_RUB || amountRub > CUSTOM_QUOTE_MAX_RUB) return;
+    const title = payload.title.trim().slice(0, 200) || "Проект по договорённости с ИИ";
+    const summary = payload.summary.trim().slice(0, 2000);
+    const clientLineId =
+      typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `q-${Date.now()}`;
+    const line: CustomCartLine = {
+      kind: "custom",
+      clientLineId,
+      title,
+      amountRub,
+      summary,
+      quantity: 1
+    };
+    setLines((prev) => [...prev, line]);
+    setChoiceModal({ open: true, title: `${title} — ${amountRub.toLocaleString("ru-RU")} ₽` });
+  }, []);
+
+  const setQuantity = useCallback((lineKey: string, quantity: number) => {
     setLines((prev) => {
-      if (quantity < 1) return prev.filter((l) => l.serviceId !== serviceId);
-      return prev.map((l) => (l.serviceId === serviceId ? { ...l, quantity } : l));
+      if (quantity < 1) return prev.filter((l) => lineStableKey(l) !== lineKey);
+      return prev.map((l) => (lineStableKey(l) === lineKey ? { ...l, quantity } : l));
     });
   }, []);
 
-  const removeLine = useCallback((serviceId: ServiceId) => {
-    setLines((prev) => prev.filter((l) => l.serviceId !== serviceId));
+  const removeLine = useCallback((lineKey: string) => {
+    setLines((prev) => prev.filter((l) => lineStableKey(l) !== lineKey));
   }, []);
 
   const clearCart = useCallback(() => setLines([]), []);
@@ -123,6 +168,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       lines,
       addLine,
+      addCustomQuote,
       setQuantity,
       removeLine,
       clearCart,
@@ -132,7 +178,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
       choiceModal,
       closeChoiceModal
     }),
-    [lines, addLine, setQuantity, removeLine, clearCart, totalRub, totalCount, resolvedLines, choiceModal, closeChoiceModal]
+    [
+      lines,
+      addLine,
+      addCustomQuote,
+      setQuantity,
+      removeLine,
+      clearCart,
+      totalRub,
+      totalCount,
+      resolvedLines,
+      choiceModal,
+      closeChoiceModal
+    ]
   );
 
   return (

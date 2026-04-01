@@ -3,6 +3,7 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useCart } from "@/context/CartContext";
+import { formatRuPhoneMask, isValidPhone } from "@/lib/phone-normalize";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -27,7 +28,8 @@ export default function CartPage() {
       resolvedLines.map((line) => ({
         title: line.title,
         quantity: line.quantity,
-        lineTotalRub: line.lineTotalRub
+        lineTotalRub: line.lineTotalRub,
+        note: line.kind === "custom" ? line.summary : undefined
       })),
     [resolvedLines]
   );
@@ -35,11 +37,10 @@ export default function CartPage() {
   const validateRegistration = () => {
     const phoneTrimmed = phone.trim();
     const emailTrimmed = email.trim();
-    const phoneDigits = phoneTrimmed.replace(/\D/g, "");
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed);
 
-    if (phoneDigits.length < 10) {
-      return "Укажите корректный номер телефона";
+    if (!isValidPhone(phoneTrimmed)) {
+      return "Укажите полный номер в формате +7 (___) ___-__-__";
     }
     if (!emailOk) {
       return "Укажите корректный email";
@@ -75,7 +76,7 @@ export default function CartPage() {
       }
       setSmsRequested(true);
       setPhoneVerified(false);
-      setInfo(data.debugCode ? `Код (тест): ${data.debugCode}` : "Код отправлен на телефон");
+      setInfo(data.debugCode ? `Код (тест): ${data.debugCode}` : "Ожидайте звонок — введите последние 4 цифры номера");
     } catch {
       setError("Ошибка сети при отправке кода");
     } finally {
@@ -87,7 +88,7 @@ export default function CartPage() {
     setError(null);
     setInfo(null);
     if (!smsRequested) {
-      setError("Сначала запросите SMS-код");
+      setError("Сначала запросите звонок с кодом");
       return;
     }
     if (!/^\d{4}$/.test(smsCode.trim())) {
@@ -128,7 +129,7 @@ export default function CartPage() {
       return;
     }
     if (!phoneVerified) {
-      setError("Подтвердите номер телефона через SMS перед оплатой");
+      setError("Подтвердите номер телефона по звонку перед оплатой");
       return;
     }
     setLoading(true);
@@ -137,7 +138,18 @@ export default function CartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: lines.map((l) => ({ serviceId: l.serviceId, quantity: l.quantity })),
+          items: lines.map((l) =>
+            l.kind === "catalog"
+              ? { type: "catalog" as const, serviceId: l.serviceId, quantity: l.quantity }
+              : {
+                  type: "custom" as const,
+                  clientLineId: l.clientLineId,
+                  title: l.title,
+                  amountRub: l.amountRub,
+                  summary: l.summary,
+                  quantity: l.quantity
+                }
+          ),
           customer: {
             phone: phone.trim(),
             email: email.trim(),
@@ -196,11 +208,17 @@ export default function CartPage() {
             <div className="mt-8 space-y-4">
               <ul className="space-y-3">
                 {resolvedLines.map((line) => (
-                  <li key={line.serviceId} className="glass-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <li
+                    key={line.lineKey}
+                    className="glass-card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                  >
                     <div>
                       <p className="font-semibold">{line.title}</p>
-                      <p className="text-sm opacity-75">
-                        {line.unitPriceRub.toLocaleString("ru-RU")} × {line.quantity}
+                      {line.kind === "custom" && line.summary ? (
+                        <p className="mt-1 text-xs opacity-75 line-clamp-3">{line.summary}</p>
+                      ) : null}
+                      <p className="mt-1 text-sm opacity-75">
+                        {line.unitPriceRub.toLocaleString("ru-RU")} ₽ × {line.quantity}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -209,7 +227,7 @@ export default function CartPage() {
                           type="button"
                           aria-label="Меньше"
                           className="rounded px-2 py-1 hover:bg-white/10"
-                          onClick={() => setQuantity(line.serviceId, line.quantity - 1)}
+                          onClick={() => setQuantity(line.lineKey, line.quantity - 1)}
                         >
                           −
                         </button>
@@ -218,15 +236,15 @@ export default function CartPage() {
                           type="button"
                           aria-label="Больше"
                           className="rounded px-2 py-1 hover:bg-white/10"
-                          onClick={() => setQuantity(line.serviceId, line.quantity + 1)}
+                          onClick={() => setQuantity(line.lineKey, line.quantity + 1)}
                         >
                           +
                         </button>
                       </div>
-                      <p className="min-w-[100px] text-right font-bold">{line.lineTotalRub.toLocaleString("ru-RU")}</p>
+                      <p className="min-w-[100px] text-right font-bold">{line.lineTotalRub.toLocaleString("ru-RU")} ₽</p>
                       <button
                         type="button"
-                        onClick={() => removeLine(line.serviceId)}
+                        onClick={() => removeLine(line.lineKey)}
                         className="text-sm text-red-500 underline-offset-2 hover:underline dark:text-red-400"
                       >
                         Удалить
@@ -252,7 +270,7 @@ export default function CartPage() {
                           required
                           value={phone}
                           onChange={(e) => {
-                            setPhone(e.target.value);
+                            setPhone(formatRuPhoneMask(e.target.value));
                             setSmsRequested(false);
                             setSmsCode("");
                             setPhoneVerified(false);
@@ -304,23 +322,23 @@ export default function CartPage() {
                           disabled={smsLoading}
                           className="rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-60"
                         >
-                          {smsLoading ? "Отправка..." : "Отправить SMS-код"}
+                          {smsLoading ? "Отправка..." : "Позвонить с кодом"}
                         </button>
                         {smsRequested && (
-                          <span className="self-center text-xs opacity-70">Код отправлен, проверьте телефон</span>
+                          <span className="self-center text-xs opacity-70">Звонок запрошен — введите 4 цифры</span>
                         )}
                       </div>
                       {smsRequested && (
                         <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
                           <label className="text-sm">
-                            <span className="mb-1 block opacity-80">Код из SMS *</span>
+                            <span className="mb-1 block opacity-80">Код из звонка *</span>
                             <input
                               type="text"
                               inputMode="numeric"
-                              maxLength={6}
+                              maxLength={4}
                               value={smsCode}
-                              onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, ""))}
-                              placeholder="123456"
+                              onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                              placeholder="0000"
                               className="w-full rounded-lg border border-white/20 bg-transparent px-3 py-2 outline-none transition focus:border-indigo-400"
                             />
                           </label>
