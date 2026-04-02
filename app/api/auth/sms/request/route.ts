@@ -5,7 +5,9 @@ import {
   requestVerificationCodeWithKnownCode,
   upsertContact
 } from "@/lib/contacts-db";
+import { generateOtpDigits } from "@/lib/fixed-otp";
 import { requestSmsRuCallCode } from "@/lib/sms-sender";
+import { sendSmsCode } from "@/lib/sms-sender";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -33,12 +35,25 @@ export async function POST(request: Request) {
   }
 
   upsertContact(phone, email);
-  const call = await requestSmsRuCallCode(normalizePhone(phone), "-1");
+  const normalizedPhone = normalizePhone(phone);
+  const call = await requestSmsRuCallCode(normalizedPhone, "-1");
+  const code = call.ok ? call.code : generateOtpDigits(4);
+  const hint = call.ok
+    ? "Сейчас вам поступит звонок. Введите последние 4 цифры номера, который позвонит."
+    : "Звонок не прошел. Мы отправили SMS с 4-значным кодом подтверждения.";
   if (!call.ok) {
-    return NextResponse.json({ error: `Звонок: ${call.error}` }, { status: 503 });
+    const smsFallback = await sendSmsCode(normalizedPhone, code);
+    if (!smsFallback.ok) {
+      return NextResponse.json(
+        {
+          error: `Не удалось отправить код ни звонком, ни SMS. Звонок: ${call.error}. SMS: ${smsFallback.error}`
+        },
+        { status: 503 }
+      );
+    }
   }
 
-  const stored = requestVerificationCodeWithKnownCode(phone, call.code);
+  const stored = requestVerificationCodeWithKnownCode(phone, code);
   if (!stored.ok) {
     if ("waitSeconds" in stored) {
       return NextResponse.json({ error: `Повторная попытка доступна через ${stored.waitSeconds} сек.` }, { status: 429 });
@@ -49,7 +64,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     expiresAt: stored.expiresAt,
-    hint: "Сейчас вам поступит звонок. Введите последние 4 цифры номера, который позвонит."
+    hint
   });
 }
 
