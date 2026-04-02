@@ -27,7 +27,7 @@ export default function Contacts() {
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
             className="mx-auto mt-8 inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass"
           >
-            Связаться с нами
+            Связаться с нами в телеграме
           </motion.a>
 
           <a
@@ -37,16 +37,7 @@ export default function Contacts() {
             className="mx-auto mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 font-semibold hover:bg-white/10"
           >
             <MessageCircle size={18} />
-            Наш Telegram-бот: @Site_and_Bot_Lab_bot
-          </a>
-
-          <a
-            href="https://t.me/Site_and_Bot_Lab_bot"
-            target="_blank"
-            rel="noreferrer"
-            className="mx-auto mt-2 inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 font-semibold hover:bg-white/10"
-          >
-            Отзывы в Telegram-канале
+            Наш бот: @Site_and_Bot_Lab_bot
           </a>
 
         </div>
