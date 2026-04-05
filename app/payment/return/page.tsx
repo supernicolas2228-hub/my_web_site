@@ -61,16 +61,14 @@ export default function PaymentReturnPage() {
         <div className="glass-card p-8 text-center">
           <h1 className="font-heading text-2xl font-bold md:text-3xl">Спасибо!</h1>
           <p className="mt-4 text-base opacity-90">
-            Если оплата прошла успешно, мы увидим платёж в ЮKassa. При необходимости свяжемся с вами по контактам с
-            сайта.
+            Если оплата прошла успешно, мы увидим её в кабинете Robokassa или ЮKassa (в зависимости от выбранного
+            способа). При необходимости свяжемся с вами по контактам с сайта.
           </p>
           <p className="mt-4 text-sm font-semibold">
             Оплата прошла успешно? Напишите нам в Telegram — там мы передадим сайт и доступы.
           </p>
           <p className="mt-2 text-xs opacity-75">Контакт в Telegram: +{managerPhone}</p>
-          <p className="mt-2 text-sm opacity-75">
-            Статус платежа в кабинете ЮKassa может обновиться с небольшой задержкой.
-          </p>
+          <p className="mt-2 text-sm opacity-75">Статус платежа в платёжном кабинете может обновиться с небольшой задержкой.</p>
           <div className="mt-8 flex justify-center">
             <a
               href={telegramHref}

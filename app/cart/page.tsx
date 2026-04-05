@@ -134,7 +134,7 @@ export default function CartPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/yookassa/create-payment", {
+      const res = await fetch("/api/checkout/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +192,9 @@ export default function CartPage() {
       <main className="min-h-screen px-3 pb-20 pt-24 sm:px-4">
         <div className="site-container max-w-3xl">
           <h1 className="font-heading text-3xl font-bold md:text-4xl">Корзина</h1>
-          <p className="mt-2 text-sm opacity-80 md:text-base">Проверьте услуги и сумму, затем оплатите через ЮKassa.</p>
+          <p className="mt-2 text-sm opacity-80 md:text-base">
+            Проверьте услуги и сумму, затем оплатите онлайн (основной способ — Robokassa; при недоступности — ЮKassa).
+          </p>
 
           {resolvedLines.length === 0 ? (
             <div className="glass-card mt-8 p-8 text-center">
@@ -363,7 +365,7 @@ export default function CartPage() {
                     onClick={pay}
                     className="rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass disabled:opacity-60"
                   >
-                    {loading ? "Переход к оплате…" : "Оплатить через ЮKassa"}
+                    {loading ? "Переход к оплате…" : "Оплатить"}
                   </button>
                   <button type="button" onClick={clearCart} className="text-sm opacity-70 hover:underline">
                     Очистить корзину
@@ -372,7 +374,8 @@ export default function CartPage() {
               </div>
 
               <p className="text-xs opacity-60">
-                Оплата обрабатывается ЮKassa. Укажите в .env ключи магазина и публичный URL сайта — см. .env.example.
+                Оплата: Robokassa (основной) или ЮKassa (запасной). В .env — ROBOKASSA_* и при необходимости YOOKASSA_*,
+                см. .env.example.
               </p>
             </div>
           )}
