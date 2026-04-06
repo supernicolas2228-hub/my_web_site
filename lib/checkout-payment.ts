@@ -171,8 +171,17 @@ export function appendPurchaseIntentForContact(data: PreparedCheckout) {
   if (contactRow) appendClientPurchaseIntentMessage(contactRow.id);
 }
 
+/** ЮKassa в dev вызывается, если заданы shopId и secret; обход только по флагу или если ключей нет (удобно без кассы). */
+function yookassaEnvConfigured(): boolean {
+  return Boolean(
+    (process.env.YOOKASSA_SHOP_ID || "").trim() && (process.env.YOOKASSA_SECRET_KEY || "").trim()
+  );
+}
+
 export function paymentBypassEnabled() {
-  return process.env.PAYMENT_BYPASS === "1" || process.env.YOOKASSA_BYPASS === "1" || process.env.NODE_ENV !== "production";
+  if (process.env.PAYMENT_BYPASS === "1" || process.env.YOOKASSA_BYPASS === "1") return true;
+  if (process.env.NODE_ENV !== "production" && !yookassaEnvConfigured()) return true;
+  return false;
 }
 
 export function mockPaymentReturnUrl(request: Request) {
