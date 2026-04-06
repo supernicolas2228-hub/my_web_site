@@ -373,9 +373,21 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <p className="text-xs opacity-60">
-                Оплата: Robokassa (основной) или ЮKassa (запасной). В .env — ROBOKASSA_* и при необходимости YOOKASSA_*,
-                см. .env.example.
+              <p className="text-xs leading-relaxed opacity-70">
+                Оплата банковской картой через Robokassa (основной способ) или ЮKassa (резерв). Оформляя заказ, вы
+                подтверждаете ознакомление с{" "}
+                <Link href="/privacy" className="underline underline-offset-2">
+                  политикой конфиденциальности
+                </Link>
+                ,{" "}
+                <Link href="/payment-refund" className="underline underline-offset-2">
+                  условиями оплаты и возврата
+                </Link>{" "}
+                и{" "}
+                <Link href="/delivery" className="underline underline-offset-2">
+                  информацией о сроках передачи услуг
+                </Link>
+                .
               </p>
             </div>
           )}

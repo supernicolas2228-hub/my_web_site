@@ -1,6 +1,7 @@
+import OrganizationJsonLd from "@/components/OrganizationJsonLd";
+import ClientProviders from "@/components/ClientProviders";
 import type { Metadata } from "next";
 import { Manrope, Montserrat, Syne } from "next/font/google";
-import ClientProviders from "@/components/ClientProviders";
 import "./globals.css";
 
 const syne = Syne({
@@ -53,13 +54,16 @@ export const metadata: Metadata = {
     description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов.",
     images: ["/og-image.svg"]
   },
+  manifest: "/site.webmanifest",
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "48x48", type: "image/x-icon" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
       { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" }
     ],
     apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
-    shortcut: ["/favicon-32.png"]
+    shortcut: ["/favicon.ico"]
   },
   robots: {
     index: true,
@@ -82,6 +86,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${syne.variable} ${manrope.variable} ${montserrat.variable} font-body antialiased`}>
+        <OrganizationJsonLd />
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

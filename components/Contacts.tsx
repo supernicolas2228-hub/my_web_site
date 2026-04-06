@@ -1,22 +1,46 @@
 "use client";
 
-import { MessageCircle, Phone } from "lucide-react";
+import { getSiteLegal } from "@/lib/site-legal";
+import { Mail, MessageCircle, Phone } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function Contacts() {
+  const L = getSiteLegal();
+
   return (
     <section id="contacts" className="section-space relative px-3 sm:px-4">
       <div className="pointer-events-none absolute inset-0 mx-auto max-w-4xl rounded-full bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 blur-3xl" />
       <div className="site-container relative max-w-3xl">
         <div className="glass-card p-8 text-center md:p-10">
           <h2 className="font-heading text-3xl font-bold md:text-4xl">Контакты</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">
+            Реквизиты и юридические документы совпадают с размещёнными на сайте (см.{" "}
+            <Link href="/requisites" className="font-medium underline underline-offset-2">
+              реквизиты
+            </Link>
+            ).
+          </p>
+
           <a
-            href="tel:+16822936330"
+            href={`tel:${L.phoneTel}`}
             className="mx-auto mt-6 inline-flex min-h-11 items-center gap-3 rounded-xl px-4 py-2 text-lg font-semibold hover:bg-white/10"
           >
             <Phone size={20} />
-            +1 682 293 6330
+            {L.phoneDisplay}
           </a>
+
+          <a
+            href={`mailto:${L.email}`}
+            className="mx-auto mt-3 flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-base font-semibold hover:bg-white/10"
+          >
+            <Mail size={18} />
+            {L.email}
+          </a>
+
+          {L.legalAddress ? (
+            <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed opacity-85">{L.legalAddress}</p>
+          ) : null}
 
           <motion.a
             href="https://t.me/Site_and_Bot_Lab_bot"
@@ -39,7 +63,6 @@ export default function Contacts() {
             <MessageCircle size={18} />
             Наш бот: @Site_and_Bot_Lab_bot
           </a>
-
         </div>
       </div>
     </section>

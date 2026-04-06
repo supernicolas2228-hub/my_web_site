@@ -13,7 +13,8 @@ chmod 775 data 2>/dev/null || true
 rm -rf 'app/api/admin/clients/[id]/stage'
 
 echo "==> npm ci"
-npm ci
+# png-to-ico объявляет engines node>=20; на части VPS стоит Node 18 — билд не зависит от генерации ico на сервере.
+npm ci --ignore-engines
 
 echo "==> npm run build"
 npm run build
