@@ -161,7 +161,7 @@ export default function Pricing() {
         </p>
         <p className="mt-3 max-w-2xl text-base text-black opacity-90 dark:text-white md:text-lg">
           Листайте влево и вправо — видно {cols === 1 ? "одну" : cols === 2 ? "две" : "три"} услуги, остальные рядом.
-          Добавляйте услуги в корзину и оплачивайте онлайн (Robokassa / ЮKassa). В карточке «Подробнее» можно открыть{" "}
+          Добавляйте услуги в корзину и оплачивайте онлайн через ЮKassa. В карточке «Подробнее» можно открыть{" "}
           <span className="font-semibold dark:text-indigo-200">расчёт стоимости</span>.
         </p>
 

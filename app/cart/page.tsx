@@ -193,7 +193,7 @@ export default function CartPage() {
         <div className="site-container max-w-3xl">
           <h1 className="font-heading text-3xl font-bold md:text-4xl">Корзина</h1>
           <p className="mt-2 text-sm opacity-80 md:text-base">
-            Проверьте услуги и сумму, затем оплатите онлайн (основной способ — Robokassa; при недоступности — ЮKassa).
+            Проверьте услуги и сумму, затем оплатите онлайн через ЮKassa (карты МИР, Visa, Mastercard и др.).
           </p>
 
           {resolvedLines.length === 0 ? (
@@ -374,7 +374,7 @@ export default function CartPage() {
               </div>
 
               <p className="text-xs leading-relaxed opacity-70">
-                Оплата банковской картой через Robokassa (основной способ) или ЮKassa (резерв). Оформляя заказ, вы
+                Оплата банковской картой через ЮKassa. Оформляя заказ, вы
                 подтверждаете ознакомление с{" "}
                 <Link href="/privacy" className="underline underline-offset-2">
                   политикой конфиденциальности

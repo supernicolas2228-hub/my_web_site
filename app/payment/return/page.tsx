@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -61,8 +61,8 @@ export default function PaymentReturnPage() {
         <div className="glass-card p-8 text-center">
           <h1 className="font-heading text-2xl font-bold md:text-3xl">Спасибо!</h1>
           <p className="mt-4 text-base opacity-90">
-            Если оплата прошла успешно, мы увидим её в кабинете Robokassa или ЮKassa (в зависимости от выбранного
-            способа). При необходимости свяжемся с вами по контактам с сайта.
+            Если оплата прошла успешно, мы увидим её в личном кабинете ЮKassa. При необходимости свяжемся с вами по
+            контактам с сайта.
           </p>
           <p className="mt-4 text-sm font-semibold">
             Оплата прошла успешно? Напишите нам в Telegram — там мы передадим сайт и доступы.

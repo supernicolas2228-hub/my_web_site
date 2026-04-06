@@ -11,8 +11,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 /**
- * Прямое создание платежа только в ЮKassa (для совместимости).
- * Основной поток корзины — POST /api/checkout/create-payment (Robokassa → ЮKassa).
+ * Прямое создание платежа ЮKassa (совместимость; корзина использует тот же поток — /api/checkout/create-payment).
  */
 export async function POST(request: Request) {
   let body: unknown;

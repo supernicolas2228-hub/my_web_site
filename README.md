@@ -16,14 +16,14 @@ npm start
 
 - `/` — главная
 - `/about` — подробный текст «О нас»
-- `/cart` — корзина услуг и оплата (Robokassa / ЮKassa)
+- `/cart` — корзина услуг и оплата (ЮKassa)
 - `/payment/return` — возврат после оплаты
 
-## Корзина и оплата
+## Корзина и оплата (ЮKassa)
 
 1. Скопируй [`.env.example`](.env.example) в `.env.local` (локально) или задай переменные на сервере.
-2. Основной способ: `ROBOKASSA_MERCHANT_LOGIN`, `ROBOKASSA_PASSWORD_1`, `ROBOKASSA_PASSWORD_2`, `NEXT_PUBLIC_SITE_URL`. В кабинете Robokassa укажи **Result URL**: `https://ТВОЙ_ДОМЕН/api/robokassa/result`.
-3. Запасной: `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY`. Подробнее: [`docs/YOOKASSA.md`](docs/YOOKASSA.md).
+2. Обязательно: `YOOKASSA_SHOP_ID`, `YOOKASSA_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL` (HTTPS в проде).
+3. Полный чек-лист — что взять в кабинете, куда вставить URL вебхука и как проверить: [`docs/YOOKASSA.md`](docs/YOOKASSA.md).
 
 Сумма заказа на сервере считается по [`lib/services-catalog.ts`](lib/services-catalog.ts), не по данным из браузера.
 

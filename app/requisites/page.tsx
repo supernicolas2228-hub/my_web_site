@@ -16,7 +16,7 @@ export default function RequisitesPage() {
   return (
     <LegalDocLayout title="Реквизиты исполнителя">
       <p className="text-sm opacity-80">
-        Данные должны совпадать с анкетой в ЮKassa / Robokassa и выпиской из ЕГРИП. Публичный адрес страницы:{" "}
+        Данные должны совпадать с анкетой в ЮKassa и выпиской из ЕГРИП. Публичный адрес страницы:{" "}
         <Link href="/requisites" className="underline underline-offset-2">
           {site}/requisites
         </Link>
