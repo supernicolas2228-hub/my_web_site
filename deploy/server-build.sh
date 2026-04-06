@@ -11,6 +11,7 @@ chmod 775 data 2>/dev/null || true
 
 # tar при обновлении не удаляет файлы, которых больше нет в архиве — чистим устаревшие API.
 rm -rf 'app/api/admin/clients/[id]/stage'
+rm -rf app/api/robokassa
 
 echo "==> npm ci"
 # png-to-ico объявляет engines node>=20; на части VPS стоит Node 18 — билд не зависит от генерации ico на сервере.
