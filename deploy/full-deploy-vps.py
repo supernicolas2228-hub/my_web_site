@@ -31,16 +31,80 @@ _load_local_deploy_env()
 HOST = os.environ.get("TRUWEB_VPS_HOST", "138.124.90.218")
 USER = os.environ.get("TRUWEB_VPS_USER", "root")
 PWD = os.environ.get("TRUWEB_VPS_SSH_PASSWORD", "")
+SSH_KEY = os.environ.get("TRUWEB_VPS_SSH_KEY", "").strip()
 REMOTE_PATH = "/var/www/business-card-site"
 REMOTE_ARCHIVE = "/tmp/truweb-deploy.tar.gz"
 # data/ — SQLite на сервере; не включать, иначе локальный app.db затирает продакшен-данные (клиенты, заказы).
 EXCLUDE = {"node_modules", ".next", ".git", "data"}
 
 
+def _ssh_key_candidates() -> list[Path]:
+    out: list[Path] = []
+    if SSH_KEY:
+        out.append(Path(SSH_KEY).expanduser())
+    ssh_dir = Path.home() / ".ssh"
+    for name in ("id_ed25519", "id_rsa", "id_ecdsa"):
+        p = ssh_dir / name
+        if p.is_file():
+            out.append(p)
+    # уникальные, порядок сохраняем
+    seen: set[str] = set()
+    uniq: list[Path] = []
+    for p in out:
+        s = str(p.resolve()) if p.exists() else str(p)
+        if s not in seen:
+            seen.add(s)
+            uniq.append(p)
+    return uniq
+
+
+def ssh_connect(client: paramiko.SSHClient) -> None:
+    """Сервер может принимать только publickey — сначала ключи, затем пароль."""
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    errors: list[str] = []
+    for kp in _ssh_key_candidates():
+        if not kp.is_file():
+            continue
+        try:
+            client.connect(
+                HOST,
+                username=USER,
+                key_filename=str(kp),
+                timeout=90,
+                look_for_keys=False,
+                allow_agent=False,
+            )
+            return
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{kp}: {e}")
+    if PWD.strip():
+        try:
+            client.connect(
+                HOST,
+                username=USER,
+                password=PWD,
+                timeout=90,
+                look_for_keys=False,
+                allow_agent=False,
+            )
+            return
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"password: {e}")
+    print(
+        "SSH: не удалось войти. Добавьте в .deploy.env ключ: TRUWEB_VPS_SSH_KEY=C:\\Users\\...\\.ssh\\id_ed25519\n"
+        "или настройте пароль, если сервер принимает PasswordAuthentication.",
+        file=sys.stderr,
+    )
+    for line in errors[-5:]:
+        print(line, file=sys.stderr)
+    raise SystemExit(1)
+
+
 def main() -> None:
-    if not PWD.strip():
+    if not SSH_KEY and not PWD.strip() and not any(p.is_file() for p in _ssh_key_candidates()):
         print(
-            "Задайте TRUWEB_VPS_SSH_PASSWORD в переменной окружения или в файле .deploy.env в корне проекта (см. .deploy.env.example).",
+            "Нужен доступ по SSH: укажите TRUWEB_VPS_SSH_KEY или положите ключ в ~/.ssh/id_ed25519 (или id_rsa),\n"
+            "либо TRUWEB_VPS_SSH_PASSWORD в .deploy.env — см. .deploy.env.example.",
             file=sys.stderr,
         )
         raise SystemExit(1)
@@ -61,8 +125,7 @@ def main() -> None:
                     tar.add(p, arcname=str(rel))
 
         client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(HOST, username=USER, password=PWD, timeout=60)
+        ssh_connect(client)
         sftp = client.open_sftp()
         sftp.put(tar_path, REMOTE_ARCHIVE)
         sftp.close()

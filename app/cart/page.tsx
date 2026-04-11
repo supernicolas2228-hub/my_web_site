@@ -374,20 +374,8 @@ export default function CartPage() {
               </div>
 
               <p className="text-xs leading-relaxed opacity-70">
-                Оплата банковской картой через ЮKassa. Оформляя заказ, вы
-                подтверждаете ознакомление с{" "}
-                <Link href="/privacy" className="underline underline-offset-2">
-                  политикой конфиденциальности
-                </Link>
-                ,{" "}
-                <Link href="/payment-refund" className="underline underline-offset-2">
-                  условиями оплаты и возврата
-                </Link>{" "}
-                и{" "}
-                <Link href="/delivery" className="underline underline-offset-2">
-                  информацией о сроках передачи услуг
-                </Link>
-                .
+                Оплата банковской картой через ЮKassa. Оформляя заказ, вы подтверждаете согласие с условиями оказания
+                услуг и обработкой данных, необходимых для оформления и исполнения заказа.
               </p>
             </div>
           )}

@@ -1,5 +1,6 @@
 import LegalDocLayout from "@/components/LegalDocLayout";
-import { getSiteLegal, getSiteUrl } from "@/lib/site-legal";
+import { TELEGRAM_BOT_LABEL, TELEGRAM_BOT_URL } from "@/lib/public-contact";
+import { getSiteUrl } from "@/lib/site-legal";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  const L = getSiteLegal();
   const site = getSiteUrl();
 
   return (
@@ -26,34 +26,21 @@ export default function PrivacyPage() {
       <h2>1. Общие положения</h2>
       <p>
         Настоящая политика определяет порядок обработки и защиты персональных данных пользователей сайта{" "}
-        <strong>{site}</strong> (далее — Сайт), оказывающего услуги под брендом <strong>{L.brandName}</strong>.
+        <strong>{site}</strong> (далее — Сайт), оказывающего услуги под брендом <strong>TrueWeb</strong>.
       </p>
       <p>
-        Оператор персональных данных: <strong>{L.soleProprietorFio}</strong> (далее — Оператор). ИНН:{" "}
-        <strong>{L.inn}</strong>
-        {L.ogrnip ? (
-          <>
-            . ОГРНИП: <strong>{L.ogrnip}</strong>
-          </>
-        ) : null}
-        .
-      </p>
-      <p>
-        Контакты Оператора: электронная почта{" "}
-        <a className="font-medium underline underline-offset-2" href={`mailto:${L.email}`}>
-          {L.email}
-        </a>
-        , телефон{" "}
-        <a className="font-medium underline underline-offset-2" href={`tel:${L.phoneTel}`}>
-          {L.phoneDisplay}
+        Оператор персональных данных — администрация Сайта TrueWeb (далее — Оператор). По вопросам обработки
+        персональных данных обращайтесь в Telegram:{" "}
+        <a
+          className="font-medium underline underline-offset-2"
+          href={TELEGRAM_BOT_URL}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {TELEGRAM_BOT_LABEL}
         </a>
         .
       </p>
-      {L.legalAddress ? (
-        <p>
-          Юридический (почтовый) адрес: <strong>{L.legalAddress}</strong>.
-        </p>
-      ) : null}
       <p>
         Обработка персональных данных выполняется в соответствии с Федеральным законом № 152‑ФЗ «О персональных
         данных».
@@ -106,7 +93,11 @@ export default function PrivacyPage() {
       <p>
         Вы вправе запросить уточнение, блокирование или удаление данных (если это не противоречит закону), отозвать
         согласие, обратиться с жалобой в уполномоченный орган по защите прав субъектов персональных данных. Для этого
-        направьте обращение на {L.email}.
+        направьте обращение через Telegram:{" "}
+        <a className="font-medium underline underline-offset-2" href={TELEGRAM_BOT_URL} target="_blank" rel="noreferrer">
+          {TELEGRAM_BOT_LABEL}
+        </a>
+        .
       </p>
 
       <h2>8. Файлы cookie</h2>
@@ -119,22 +110,6 @@ export default function PrivacyPage() {
       <p>
         Оператор вправе обновлять политику. Актуальная редакция публикуется на этой странице; продолжение использования
         Сайта после публикации означает согласие с обновлениями в части, не противоречащей закону.
-      </p>
-
-      <p className="text-sm opacity-80">
-        См. также:{" "}
-        <Link href="/payment-refund" className="underline underline-offset-2">
-          оплата и возврат
-        </Link>
-        ,{" "}
-        <Link href="/delivery" className="underline underline-offset-2">
-          доставка и сроки
-        </Link>
-        ,{" "}
-        <Link href="/requisites" className="underline underline-offset-2">
-          реквизиты
-        </Link>
-        .
       </p>
     </LegalDocLayout>
   );

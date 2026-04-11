@@ -11,7 +11,8 @@ if (-not (Get-Command tar -ErrorAction SilentlyContinue)) {
   Write-Error "tar not found."
 }
 
-$exclude = @("node_modules", ".next", ".git")
+# data — БД на VPS; не класть в архив, чтобы не затереть продакшен при распаковке.
+$exclude = @("node_modules", ".next", ".git", "data")
 $staging = Join-Path $env:TEMP ("truweb-staging-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $staging | Out-Null
 

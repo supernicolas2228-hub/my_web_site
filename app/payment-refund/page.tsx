@@ -1,5 +1,6 @@
 import LegalDocLayout from "@/components/LegalDocLayout";
-import { getSiteLegal, getSiteUrl } from "@/lib/site-legal";
+import { TELEGRAM_BOT_LABEL, TELEGRAM_BOT_URL } from "@/lib/public-contact";
+import { getSiteUrl } from "@/lib/site-legal";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -11,36 +12,22 @@ export const metadata: Metadata = {
 };
 
 export default function PaymentRefundPage() {
-  const L = getSiteLegal();
   const site = getSiteUrl();
 
   return (
     <LegalDocLayout title="Условия оплаты и возврата">
-      <p className="text-sm opacity-80">
-        Информация для покупателей и платёжных систем. Реквизиты Оператора:{" "}
-        <Link href="/requisites" className="underline underline-offset-2">
-          /requisites
-        </Link>
-        .
-      </p>
+      <p className="text-sm opacity-80">Информация для покупателей и платёжных систем.</p>
 
       <h2>1. Предмет</h2>
       <p>
-        Оператор — <strong>{L.soleProprietorFio}</strong>, ИНН <strong>{L.inn}</strong>
-        {L.ogrnip ? (
-          <>
-            , ОГРНИП <strong>{L.ogrnip}</strong>
-          </>
-        ) : null}
-        , оказывает услуги по разработке веб‑сайтов, лендингов, Telegram‑ботов и сопутствующие цифровые услуги через
-        Сайт <strong>{site}</strong> (бренд <strong>{L.brandName}</strong>). Цены на услуги указаны на Сайте в рублях РФ.
-        Налоговый статус, форма чека и закрывающие документы соответствуют данным Оператора в реквизитах и
-        законодательству РФ.
+        Исполнитель услуг — администрация Сайта <strong>{site}</strong> (бренд <strong>TrueWeb</strong>). Оказываются
+        услуги по разработке веб‑сайтов, лендингов, Telegram‑ботов и сопутствующие цифровые услуги. Цены указаны на Сайте
+        в рублях РФ. Налоговый статус, форма чека и закрывающие документы соответствуют законодательству РФ.
       </p>
 
       <h2>2. Способы оплаты</h2>
       <p>Оплата производится в рублях Российской Федерации следующими способами:</p>
-          <ul>
+      <ul>
         <li>банковские карты платёжных систем МИР, Visa, Mastercard и иные способы, доступные в интерфейсе ЮKassa;</li>
         <li>
           приём платежей осуществляется через сервис <strong>ЮKassa</strong> в соответствии с их пользовательским соглашением.
@@ -65,7 +52,7 @@ export default function PaymentRefundPage() {
       </p>
       <ul>
         <li>
-          если услуга не оказана — возврат производится в полном объёме за вычетом фактических расходов Оператора,
+          если услуга не оказана — возврат производится в полном объёме за вычетом фактических расходов Исполнителя,
           подтверждённых документально (при наличии);
         </li>
         <li>
@@ -73,11 +60,11 @@ export default function PaymentRefundPage() {
           руководствуются перепиской и материалами проекта;
         </li>
         <li>
-          заявление о возврате направляйте на{" "}
-          <a href={`mailto:${L.email}`} className="font-medium underline underline-offset-2">
-            {L.email}
+          заявление о возврате направьте через Telegram{" "}
+          <a href={TELEGRAM_BOT_URL} className="font-medium underline underline-offset-2" target="_blank" rel="noreferrer">
+            {TELEGRAM_BOT_LABEL}
           </a>{" "}
-          с указанием номера заказа (телефона, email из оформления). Срок рассмотрения — до 10 рабочих дней.
+          с указанием номера заказа и контакта из оформления. Срок рассмотрения — до 10 рабочих дней.
         </li>
       </ul>
       <p>
@@ -87,8 +74,11 @@ export default function PaymentRefundPage() {
 
       <h2>5. Претензии</h2>
       <p>
-        Претензионный порядок обязателен: перед обращением в суд направьте претензию на {L.email}. Контактный телефон:{" "}
-        {L.phoneDisplay}.
+        Претензионный порядок обязателен: перед обращением в суд направьте претензию через Telegram{" "}
+        <a href={TELEGRAM_BOT_URL} className="font-medium underline underline-offset-2" target="_blank" rel="noreferrer">
+          {TELEGRAM_BOT_LABEL}
+        </a>
+        .
       </p>
 
       <p className="text-sm opacity-80">

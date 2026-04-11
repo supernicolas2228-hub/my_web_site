@@ -100,9 +100,24 @@ sudo certbot --nginx -d твой-домен.ru
 
 ---
 
-## 4. После каждого обновления сайта
+## 4. Автодеплой с Windows (`npm run deploy:vps`)
 
-1. Залить новые файлы (без `node_modules` / `.next`).
+Нужен **Python** и `pip install paramiko`. В корне проекта файл **`.deploy.env`** (не коммитить):
+
+- Если на VPS только вход по ключу (часто `PasswordAuthentication no`): укажите путь к **OpenSSH**-ключу (не `.ppk`):
+  `TRUWEB_VPS_SSH_KEY=C:\Users\Вы\.ssh\id_ed25519`
+- Ключ из PuTTY: в PuTTYgen — Conversions → Export OpenSSH key, сохраните файл и пропишите его путь в `TRUWEB_VPS_SSH_KEY`.
+- Если сервер принимает пароль: `TRUWEB_VPS_SSH_PASSWORD=...`
+
+Затем в корне проекта: `npm run deploy:vps` — архив уйдёт на сервер и выполнится `deploy/server-build.sh`.
+
+Если ключей на ПК нет — см. раздел 1 (WinSCP + архив из `deploy/pack-for-upload.ps1`).
+
+---
+
+## 5. После каждого обновления сайта
+
+1. Залить новые файлы (без `node_modules` / `.next` / локальной `data`).
 2. На сервере:
 
 ```bash
@@ -112,7 +127,7 @@ bash deploy/server-build.sh
 
 ---
 
-## Проблемы
+## 6. Проблемы
 
 | Симптом | Что проверить |
 |--------|----------------|
