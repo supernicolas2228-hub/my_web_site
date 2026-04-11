@@ -1,6 +1,18 @@
 # Деплой TrueWeb (Next.js) на VPS
 
-Я не могу зайти на твой сервер за тебя — нужен **SSH с твоего ПК**. Ниже точные шаги.
+## Деплой из GitHub (без SSH с ПК)
+
+В репозитории есть workflow **Deploy VPS** (`.github/workflows/deploy-vps.yml`).
+
+1. На VPS один раз: `git clone https://github.com/ВАШ_АККАУНТ/my_web_site.git /var/www/business-card-site` и настройте `deploy/server-build.sh` / PM2 как ниже.
+2. В GitHub: **Settings → Secrets and variables → Actions** добавьте `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (приватный ключ, которым вы ходите на сервер).
+3. Вкладка **Actions → Deploy VPS → Run workflow**.
+
+Опциональный секрет `VPS_PATH` — если проект не в `/var/www/business-card-site`.
+
+---
+
+Автоматический деплой с вашего компьютера по-прежнему требует **SSH-ключ** в `.deploy.env` (`TRUWEB_VPS_SSH_KEY=...`) или ручную заливку архива.
 
 ## Что должно быть на сервере
 

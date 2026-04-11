@@ -31,6 +31,12 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"]
+  matcher: [
+    /*
+     * Статику Next и API не трогаем — иначе в dev иногда не подхватываются CSS/чанки («только текст»).
+     * См. https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+     */
+    "/((?!api|_next/static|_next/image|_next/webpack-hmr|favicon.ico).*)"
+  ]
 };
 
