@@ -10,14 +10,9 @@ function hasPlausibleSessionToken(cookieHeader: string | null) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Единый канонический протокол для SEO и стабильной доступности в браузерах.
-  const forwardedProto = request.headers.get("x-forwarded-proto");
-  const host = request.headers.get("host") || "";
-  if (host.includes("truewebwork.ru") && forwardedProto === "http") {
-    const httpsUrl = request.nextUrl.clone();
-    httpsUrl.protocol = "https:";
-    return NextResponse.redirect(httpsUrl, 308);
-  }
+  // Редирект HTTP→HTTPS не делаем здесь: за прокси (Cloudflare/Nginx) часто приходит
+  // X-Forwarded-Proto: http даже при открытом в браузере https — получался бесконечный редирект
+  // на мобильных. HTTPS настраивается в Nginx (listen 443 + редирект с :80).
 
   if (!pathname.startsWith("/admin")) return NextResponse.next();
   if (pathname === "/admin/login") return NextResponse.next();
