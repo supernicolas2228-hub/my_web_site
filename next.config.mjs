@@ -8,12 +8,17 @@ const nextConfig = {
       }
     ]
   },
-  // Чтобы после деплоя не подтягивался старый HTML из CDN/браузера (Ctrl+F5 не всегда помогает).
+  // Лёгкий кэш HTML: must-revalidate на каждый запрос тормозит VPN/прокси и переходы из поиска.
   async headers() {
     return [
       {
         source: "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
-        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }]
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=120, stale-while-revalidate=86400"
+          }
+        ]
       }
     ];
   }
