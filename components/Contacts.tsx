@@ -1,10 +1,13 @@
 "use client";
 
 import { TELEGRAM_BOT_LABEL, TELEGRAM_BOT_URL } from "@/lib/public-contact";
-import { MessageCircle } from "lucide-react";
+import { getPublicPhone, getTelegramPhoneUrl } from "@/lib/site-legal";
+import { MessageCircle, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Contacts() {
+  const phone = getPublicPhone();
+
   return (
     <section id="contacts" className="section-space relative px-3 sm:px-4">
       <div className="pointer-events-none absolute inset-0 mx-auto max-w-4xl rounded-full bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 blur-3xl" />
@@ -13,6 +16,22 @@ export default function Contacts() {
           <h2 className="font-heading text-3xl font-bold md:text-4xl">Контакты</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">
             Свяжитесь с нами в Telegram — ответим на вопросы по услугам и срокам.
+          </p>
+
+          <a
+            href={getTelegramPhoneUrl(phone.tel)}
+            target="_blank"
+            rel="noreferrer"
+            className="mx-auto mt-6 inline-flex min-h-11 items-center gap-3 rounded-xl px-4 py-2 text-lg font-semibold hover:bg-white/10"
+          >
+            <Phone size={20} aria-hidden />
+            <span>
+              {phone.display}
+              <span className="ml-2 text-base font-medium opacity-90">— в Telegram</span>
+            </span>
+          </a>
+          <p className="mx-auto mt-2 max-w-md text-xs leading-snug opacity-75">
+            Виртуальный номер: звонки не принимаются, писать можно только в Telegram по ссылке выше.
           </p>
 
           <motion.a
