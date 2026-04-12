@@ -43,7 +43,7 @@ def _ssh_key_candidates() -> list[Path]:
     if SSH_KEY:
         out.append(Path(SSH_KEY).expanduser())
     ssh_dir = Path.home() / ".ssh"
-    for name in ("id_ed25519", "id_rsa", "id_ecdsa"):
+    for name in ("id_ed25519", "id_rsa", "id_ecdsa", "id_ed25519_aeza_vps"):
         p = ssh_dir / name
         if p.is_file():
             out.append(p)
