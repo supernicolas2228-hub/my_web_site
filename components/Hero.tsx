@@ -1,8 +1,7 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 export default function Hero() {
+  const cta =
+    "inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass transition-transform duration-200 will-change-transform hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-[0.98]";
+
   return (
     <section id="hero" className="relative flex min-h-screen items-center justify-center px-3 pt-24 sm:px-4">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -26,24 +25,12 @@ export default function Hero() {
         </p>
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <motion.a
-            href="/#about"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.4)" }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass"
-          >
+          <a href="/#about" className={cta}>
             О нас
-          </motion.a>
-          <motion.a
-            href="/#portfolio"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.4)" }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass"
-          >
+          </a>
+          <a href="/#portfolio" className={cta}>
             Наше портфолио
-          </motion.a>
+          </a>
         </div>
       </div>
     </section>

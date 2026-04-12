@@ -1,12 +1,11 @@
-"use client";
-
 import { TELEGRAM_BOT_LABEL, TELEGRAM_BOT_URL } from "@/lib/public-contact";
 import { getPublicPhone, getTelegramPhoneUrl } from "@/lib/site-legal";
 import { MessageCircle, Phone } from "lucide-react";
-import { motion } from "framer-motion";
 
 export default function Contacts() {
   const phone = getPublicPhone();
+  const ctaClass =
+    "mx-auto mt-8 inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass transition-transform duration-200 hover:scale-[1.02] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] active:scale-[0.98]";
 
   return (
     <section id="contacts" className="section-space relative px-3 sm:px-4">
@@ -34,17 +33,9 @@ export default function Contacts() {
             Виртуальный номер: звонки не принимаются, писать можно только в Telegram по ссылке выше.
           </p>
 
-          <motion.a
-            href={TELEGRAM_BOT_URL}
-            target="_blank"
-            rel="noreferrer"
-            whileHover={{ scale: 1.05, boxShadow: "0 0 25px rgba(99,102,241,0.4)" }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="mx-auto mt-8 inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/40 bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3 font-semibold text-white shadow-glass"
-          >
+          <a href={TELEGRAM_BOT_URL} target="_blank" rel="noreferrer" className={ctaClass}>
             Написать в Telegram
-          </motion.a>
+          </a>
 
           <a
             href={TELEGRAM_BOT_URL}

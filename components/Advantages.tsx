@@ -1,7 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 const advantages = [
   {
     title: "Гарантированный результат 🎯",
@@ -20,25 +16,20 @@ const advantages = [
   }
 ];
 
+const cardClass =
+  "glass-card p-6 transition-transform duration-300 will-change-transform hover:-translate-y-2 hover:shadow-[0_12px_36px_rgba(99,102,241,0.25)] motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+
 export default function Advantages() {
   return (
     <section id="advantages" className="section-space px-3 sm:px-4">
       <div className="site-container">
         <h2 className="font-heading text-3xl font-bold md:text-4xl">Почему выбирают нас</h2>
         <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {advantages.map((item, index) => (
-            <motion.article
-              key={item.title}
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.45, delay: index * 0.06 }}
-              whileHover={{ y: -8, boxShadow: "0 12px 36px rgba(99,102,241,0.25)" }}
-              className="glass-card p-6"
-            >
+          {advantages.map((item) => (
+            <article key={item.title} className={cardClass}>
               <h3 className="text-xl font-semibold leading-snug">{item.title}</h3>
               <p className="mt-3 text-slate-700 dark:text-white">{item.description}</p>
-            </motion.article>
+            </article>
           ))}
         </div>
       </div>
