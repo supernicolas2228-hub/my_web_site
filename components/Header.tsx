@@ -34,29 +34,33 @@ export default function Header() {
       className={`fixed left-0 top-0 z-50 w-full transition-all duration-300 ${scrolled ? "py-3" : "py-5"}`}
     >
       <div
-        className={`mx-auto flex w-[92%] max-w-6xl items-center justify-between rounded-2xl px-4 md:px-6 ${
+        className={`mx-auto grid w-[92%] max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-x-3 rounded-2xl px-4 py-2 md:gap-x-4 md:px-6 md:py-2.5 ${
           scrolled ? "glass-card backdrop-blur-lg" : ""
         }`}
       >
         <a
           href="/#hero"
-          className="bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-sky-500 bg-clip-text py-3 text-xl font-extrabold text-transparent [font-family:var(--font-montserrat)]"
+          className="justify-self-start bg-gradient-to-r from-indigo-500 via-fuchsia-500 to-sky-500 bg-clip-text text-lg font-extrabold leading-none text-transparent [font-family:var(--font-montserrat)] sm:text-xl"
         >
           TrueWeb
         </a>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden min-w-0 w-full max-w-full flex-nowrap items-center justify-center justify-self-center gap-x-2 overflow-x-auto overscroll-x-contain sm:gap-x-3 xl:gap-x-5 lg:flex [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => (
-            <a key={item.href} href={item.href} className="nav-link-underline text-base font-bold">
+            <a
+              key={item.href}
+              href={item.href}
+              className="nav-link-underline shrink-0 whitespace-nowrap text-center text-[0.8125rem] font-semibold leading-none tracking-tight xl:text-sm 2xl:text-[0.95rem]"
+            >
               {item.label}
             </a>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
           <Link
             href="/account"
-            className="hidden rounded-xl px-3 py-2 text-sm font-semibold opacity-90 hover:bg-white/10 md:inline-block"
+            className="hidden whitespace-nowrap rounded-xl px-2.5 py-2 text-sm font-semibold leading-none opacity-90 hover:bg-white/10 lg:inline-block xl:px-3"
           >
             Личный кабинет
           </Link>
@@ -85,7 +89,7 @@ export default function Header() {
           <button
             aria-label="Открыть меню"
             onClick={() => setOpen((prev) => !prev)}
-            className="glass-card flex h-11 w-11 items-center justify-center rounded-xl md:hidden"
+            className="glass-card flex h-11 w-11 shrink-0 items-center justify-center rounded-xl lg:hidden"
           >
             {open ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -99,7 +103,7 @@ export default function Header() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 28 }}
-            className="glass-card fixed right-4 top-20 w-64 p-5 md:hidden"
+            className="glass-card fixed right-4 top-20 z-50 w-[min(18rem,calc(100vw-2rem))] max-h-[min(24rem,calc(100vh-6rem))] overflow-y-auto p-5 lg:hidden"
           >
             <nav className="flex flex-col gap-4">
               {navItems.map((item) => (
