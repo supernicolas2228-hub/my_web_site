@@ -10,6 +10,8 @@
     "lint": "next lint",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
     "deploy:vps": "python deploy/full-deploy-vps.py",
+    "deploy:vps:eu": "python deploy/full-deploy-vps.py eu",
+    "deploy:vps:ru": "python deploy/full-deploy-vps.py ru",
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {

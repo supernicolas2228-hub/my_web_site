@@ -19,6 +19,16 @@ const montserrat = Montserrat({
   variable: "--font-montserrat"
 });
 
+function siteVerification(): Metadata["verification"] | undefined {
+  const google = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+  const yandex = process.env.NEXT_PUBLIC_YANDEX_VERIFICATION?.trim();
+  if (!google && !yandex) return undefined;
+  return {
+    ...(google ? { google } : {}),
+    ...(yandex ? { yandex } : {})
+  };
+}
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://truewebwork.ru"),
   title: {
@@ -72,7 +82,8 @@ export const metadata: Metadata = {
       index: true,
       follow: true
     }
-  }
+  },
+  verification: siteVerification()
 };
 
 export const viewport = {
