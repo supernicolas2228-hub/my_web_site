@@ -12,6 +12,7 @@ const navItems = [
   { href: "/#pricing", label: "Наши продукты" },
   { href: "/#portfolio", label: "Наше портфолио" },
   { href: "/#advantages", label: "Почему мы" },
+  { href: "/#faq", label: "FAQ" },
   { href: "/#contacts", label: "Контакты" }
 ];
 

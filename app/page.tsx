@@ -1,6 +1,7 @@
 import Advantages from "@/components/Advantages";
 import About from "@/components/About";
 import Contacts from "@/components/Contacts";
+import Faq from "@/components/Faq";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -18,6 +19,7 @@ export default function HomePage() {
         <Pricing />
         <Portfolio />
         <Advantages />
+        <Faq />
         <Contacts />
       </main>
       <Footer />
