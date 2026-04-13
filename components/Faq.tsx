@@ -4,7 +4,9 @@ export default function Faq() {
   return (
     <section id="faq" className="section-space px-3 sm:px-4">
       <div className="site-container max-w-3xl">
-        <h2 className="font-heading text-3xl font-bold md:text-4xl">Частые вопросы</h2>
+        <h2 className="font-heading text-3xl font-bold md:text-4xl">
+          Часто задаваемые вопросы
+        </h2>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-700 dark:text-slate-300 md:text-lg">
           Здесь — ответы простым языком: без канцеляризма, как будто объясняем другу или ребёнку, но
           по делу. Раскройте любой вопрос ниже.

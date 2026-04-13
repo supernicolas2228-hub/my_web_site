@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Частые вопросы",
+  title: "Часто задаваемые вопросы",
   description:
     "Что такое воронка продаж, лендинг, сайт под ключ, хостинг и домен — объясняем очень простыми словами. TrueWeb."
 };
