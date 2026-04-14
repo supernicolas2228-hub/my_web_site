@@ -2,8 +2,15 @@
  * Публичный URL сайта (env).
  * Номер телефона на сайте — только для чата в Telegram (ссылка t.me), не для звонков.
  */
+/** Публичный канонический хост в проде — совпадает с рабочим DNS у мобильных клиентов. */
+export const DEFAULT_PUBLIC_SITE_URL = "https://www.truewebwork.ru";
+
+const LEGACY_APEX_PUBLIC_URL = "https://truewebwork.ru";
+
 export function getSiteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "https://truewebwork.ru").replace(/\/+$/, "");
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_PUBLIC_SITE_URL).replace(/\/+$/, "");
+  if (raw === LEGACY_APEX_PUBLIC_URL) return DEFAULT_PUBLIC_SITE_URL;
+  return raw;
 }
 
 /** Номер для отображения и ссылки в Telegram (NEXT_PUBLIC_CONTACT_PHONE_*). */

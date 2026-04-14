@@ -1,4 +1,5 @@
 import type { PreparedCheckout } from "@/lib/checkout-payment";
+import { getSiteUrl } from "@/lib/site-legal";
 import { randomUUID } from "crypto";
 
 export type YooKassaCreateResult =
@@ -17,15 +18,11 @@ export async function createYooKassaConfirmationUrl(
 ): Promise<YooKassaCreateResult> {
   const shopId = process.env.YOOKASSA_SHOP_ID?.trim();
   const secretKey = process.env.YOOKASSA_SECRET_KEY?.trim();
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
-
   if (!shopId || !secretKey) {
     return { ok: false, error: "YooKassa is not configured" };
   }
-  if (!siteUrl) {
-    return { ok: false, error: "NEXT_PUBLIC_SITE_URL is required for payment return URL" };
-  }
 
+  const siteUrl = getSiteUrl();
   const requestOrigin = new URL(request.url).origin;
   const baseUrl = siteUrl || requestOrigin;
   const returnUrl = `${baseUrl}/payment/return`;

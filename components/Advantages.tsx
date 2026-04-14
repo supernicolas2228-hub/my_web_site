@@ -1,35 +1,47 @@
+import Reveal from "@/components/motion/Reveal";
+
 const advantages = [
   {
-    title: "Гарантированный результат 🎯",
+    title: "Результат в договоре",
     description:
-      "Все наши продукты стабильно работают для вашего бизнеса. Увеличивают продажи, конверсию заявок и доверие со стороны клиентов. 📈"
+      "Сроки и этапы фиксируем письменно: продукт стабильно работает, заявки доходят до вас — без внезапных доплат и переделок за ваш счёт."
   },
   {
-    title: "Прозрачность 🤝",
+    title: "Прозрачный процесс",
     description:
-      "Мы ценим доверие каждого нашего клиента. Фиксированная цена, соблюдение дедлайнов и договорённостей позволит вам не волноваться и полностью доверять нам. 💎"
+      "Стоимость ясна до старта, по ходу показываем статус и отчёты. На связи по согласованным каналам — без «пропавшего подрядчика»."
   },
   {
-    title: "Кроссплатформенность 🌐",
+    title: "Одна кодовая база",
     description:
-      "Позволяет продукту работать на разных устройствах и операционных системах без необходимости создавать отдельные версии для каждой из них. Для бизнеса это снижает затраты на разработку, ускоряет выход продукта на рынок и расширяет аудиторию. А для пользователей и клиентов — обеспечивает удобство, гибкость и универсальность. 📱✨"
+      "Телефон, планшет и ПК получают одно решение, а не три отдельные версии: ниже бюджет, быстрее запуск и проще сопровождение."
   }
 ];
 
 const cardClass =
-  "glass-card p-6 transition-transform duration-300 will-change-transform hover:-translate-y-2 hover:shadow-[0_12px_36px_rgba(99,102,241,0.25)] motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+  "glass-card group relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl p-6 sm:p-7 transition-all duration-300 will-change-transform hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 active:-translate-y-0.5 dark:hover:shadow-indigo-400/10";
 
 export default function Advantages() {
   return (
-    <section id="advantages" className="section-space px-3 sm:px-4">
+    <section id="advantages" className="section-space px-3 sm:px-4" aria-labelledby="advantages-heading">
       <div className="site-container">
-        <h2 className="font-heading text-3xl font-bold md:text-4xl">Почему выбирают нас</h2>
-        <div className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {advantages.map((item) => (
-            <article key={item.title} className={cardClass}>
-              <h3 className="text-xl font-semibold leading-snug">{item.title}</h3>
-              <p className="mt-3 text-slate-700 dark:text-white">{item.description}</p>
-            </article>
+        <Reveal>
+          <h2 id="advantages-heading" className="font-heading text-3xl font-bold md:text-4xl">
+            Почему выбирают нас
+          </h2>
+        </Reveal>
+        <div className="mt-10 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3 lg:gap-6">
+          {advantages.map((item, i) => (
+            <Reveal key={item.title} delay={0.05 * i} y={20} className="h-full min-h-0">
+              <article className={cardClass}>
+                <h3 className="relative min-h-[2.75rem] text-xl font-semibold leading-snug tracking-tight sm:min-h-[3.25rem]">
+                  {item.title}
+                </h3>
+                <p className="relative mt-4 flex-1 text-pretty text-base leading-relaxed text-slate-800 dark:text-slate-100">
+                  {item.description}
+                </p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>

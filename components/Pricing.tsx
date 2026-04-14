@@ -6,6 +6,7 @@ import {
   type OpenCalculatorOptions
 } from "@/context/CalculatorContext";
 import { useCart } from "@/context/CartContext";
+import Reveal from "@/components/motion/Reveal";
 import type { ServiceId } from "@/lib/services-catalog";
 import { SERVICES_CATALOG } from "@/lib/services-catalog";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -40,7 +41,7 @@ function PricingDetailModalBody({
 
   return (
     <div
-      className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-2 p-6 shadow-2xl backdrop-blur-xl"
+      className="modal-pop w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border-2 p-6 shadow-2xl backdrop-blur-xl"
       style={{
         color: ink,
         backgroundColor: panelBg,
@@ -60,7 +61,7 @@ function PricingDetailModalBody({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border px-3 py-1.5 text-sm"
+          className="btn-cart-outline rounded-lg border px-3 py-1.5 text-sm"
           style={{
             color: ink,
             borderColor: closeBorder,
@@ -71,7 +72,8 @@ function PricingDetailModalBody({
         </button>
       </div>
       <p className="mt-2 text-lg font-bold" style={{ color: ink }}>
-        {svc.priceLabel} ₽
+        {svc.priceLabel}
+        {"\u00A0\u20BD"}
       </p>
       <button
         type="button"
@@ -79,7 +81,7 @@ function PricingDetailModalBody({
           onClose();
           window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(svc.id) }), 0);
         }}
-        className="mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-4 text-center text-base font-bold text-white shadow-lg transition hover:opacity-95 active:scale-[0.99]"
+        className="btn-cart-primary mt-4 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-4 text-center text-base font-bold text-white shadow-lg"
       >
         Рассчитать стоимость: ИИ или тест
       </button>
@@ -144,7 +146,6 @@ export default function Pricing() {
     const currentIndex = Math.round(rawIndex);
     let nextIndex = currentIndex + dir;
 
-    // Кольцевая навигация: вправо с конца -> в начало, влево с начала -> в конец.
     if (nextIndex > maxIndex) nextIndex = 0;
     if (nextIndex < 0) nextIndex = maxIndex;
 
@@ -154,33 +155,39 @@ export default function Pricing() {
   return (
     <section id="pricing" className="section-space px-3 sm:px-4">
       <div className="site-container">
-        <h2 className="font-heading text-3xl font-bold text-black dark:text-white md:text-4xl">Наши продукты</h2>
-        <p className="mt-2 text-sm font-medium text-black/80 dark:text-slate-300">
-          Цены ниже — за минимальный пакет: базовый объём работ и функций по каждой услуге. Подробности — в карточке по
-          кнопке «Подробнее» (под «Добавить в корзину»).
-        </p>
-        <p className="mt-3 max-w-2xl text-base text-black opacity-90 dark:text-white md:text-lg">
-          Листайте влево и вправо — видно {cols === 1 ? "одну" : cols === 2 ? "две" : "три"} услуги, остальные рядом.
-          Добавляйте услуги в корзину и оплачивайте онлайн через ЮKassa. В карточке «Подробнее» можно открыть{" "}
-          <span className="font-semibold dark:text-indigo-200">расчёт стоимости</span>.
-        </p>
+        <Reveal>
+          <h2 className="font-heading text-3xl font-bold text-black dark:text-white md:text-4xl">Наши продукты</h2>
+        </Reveal>
+        <Reveal delay={0.04}>
+          <p className="mt-2 text-sm font-medium text-black/80 dark:text-slate-300">
+            Цены ниже — за минимальный пакет: базовый объём работ и функций по каждой услуге. Подробности — в карточке по
+            кнопке «Подробнее» (под «Добавить в корзину»).
+          </p>
+        </Reveal>
+        <Reveal delay={0.08}>
+          <p className="mt-3 max-w-2xl text-base text-black opacity-90 dark:text-white md:text-lg">
+            Листайте влево и вправо — видно {cols === 1 ? "одну" : cols === 2 ? "две" : "три"} услуги, остальные рядом.
+            Добавляйте услуги в корзину и оплачивайте онлайн через ЮKassa. В карточке «Подробнее» можно открыть{" "}
+            <span className="font-semibold dark:text-indigo-200">расчёт стоимости</span>.
+          </p>
+        </Reveal>
 
         <div className="relative mt-8">
           <button
             type="button"
             aria-label="Предыдущие услуги"
             onClick={() => scrollByDir(-1)}
-            className="absolute left-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 shadow-md backdrop-blur-sm transition hover:bg-white md:h-12 md:w-12 dark:border-white/20 dark:bg-black/50 dark:hover:bg-black/65"
+            className="group absolute left-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 shadow-md backdrop-blur-sm hover:bg-white md:h-12 md:w-12 dark:border-white/20 dark:bg-black/50 dark:hover:bg-black/65"
           >
-            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
+            <ChevronLeft className="h-5 w-5 transition-transform duration-200 ease-out group-hover:scale-125 group-active:scale-90 md:h-6 md:w-6" />
           </button>
           <button
             type="button"
             aria-label="Следующие услуги"
             onClick={() => scrollByDir(1)}
-            className="absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 shadow-md backdrop-blur-sm transition hover:bg-white md:h-12 md:w-12 dark:border-white/20 dark:bg-black/50 dark:hover:bg-black/65"
+            className="group absolute right-0 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-white/90 shadow-md backdrop-blur-sm hover:bg-white md:h-12 md:w-12 dark:border-white/20 dark:bg-black/50 dark:hover:bg-black/65"
           >
-            <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+            <ChevronRight className="h-5 w-5 transition-transform duration-200 ease-out group-hover:scale-125 group-active:scale-90 md:h-6 md:w-6" />
           </button>
 
           <div
@@ -191,13 +198,14 @@ export default function Pricing() {
               WebkitOverflowScrolling: "touch"
             }}
           >
-            {SERVICES_CATALOG.map((item) => (
+            {SERVICES_CATALOG.map((item, index) => (
               <article
                 key={item.id}
-                className="glass-card flex shrink-0 snap-start snap-always flex-col justify-between rounded-2xl p-6 opacity-100 shadow-glass"
+                className="pricing-card-shell pricing-card-animate glass-card flex shrink-0 snap-start snap-always flex-col justify-between rounded-2xl p-6 opacity-100 shadow-glass"
                 style={{
                   width: itemWidth ? `${itemWidth}px` : "100%",
-                  scrollSnapAlign: "start"
+                  scrollSnapAlign: "start",
+                  animationDelay: `${Math.min(index * 70, 350)}ms`
                 }}
               >
                 <div>
@@ -211,14 +219,14 @@ export default function Pricing() {
                   <button
                     type="button"
                     onClick={() => addLine(item.id)}
-                    className="w-full rounded-xl border border-indigo-400/80 bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/40 ring-2 ring-indigo-500/25 transition hover:shadow-xl hover:shadow-indigo-500/50 hover:brightness-105 focus-visible:outline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#e8edf5] active:scale-[0.99] dark:border-white/20 dark:from-indigo-500 dark:to-fuchsia-500 dark:shadow-indigo-950/50 dark:ring-white/10 dark:focus-visible:ring-offset-gray-900"
+                    className="btn-cart-primary w-full rounded-xl border border-indigo-400/80 bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/40 ring-2 ring-indigo-500/25 focus-visible:outline focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#e8edf5] dark:border-white/20 dark:from-indigo-500 dark:to-fuchsia-500 dark:shadow-indigo-950/50 dark:ring-white/10 dark:focus-visible:ring-offset-gray-900"
                   >
                     Добавить в корзину
                   </button>
                   <button
                     type="button"
                     onClick={() => setDetailId(item.id)}
-                    className="w-full rounded-xl border-2 border-black/20 bg-transparent px-4 py-3 text-sm font-semibold text-black transition hover:bg-black/5 dark:border-indigo-400/50 dark:text-indigo-200 dark:hover:bg-white/10"
+                    className="btn-cart-outline w-full rounded-xl border-2 border-black/20 bg-transparent px-4 py-3 text-sm font-semibold text-black focus-visible:outline focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-indigo-400/50 dark:text-indigo-200"
                   >
                     Подробнее
                   </button>
@@ -228,7 +236,7 @@ export default function Pricing() {
                       setDetailId(null);
                       window.setTimeout(() => openCalculator({ presetProjectType: serviceIdToProjectType(item.id) }), 0);
                     }}
-                    className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2.5 text-sm font-bold text-white shadow-md ring-2 ring-indigo-500/30 transition hover:brightness-105 active:scale-[0.99] dark:from-indigo-500 dark:to-fuchsia-500 dark:ring-white/10"
+                    className="btn-cart-grad w-full rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2.5 text-sm font-bold text-white shadow-md ring-2 ring-indigo-500/30 focus-visible:outline focus-visible:ring-2 focus-visible:ring-indigo-500 dark:from-indigo-500 dark:to-fuchsia-500 dark:ring-white/10"
                   >
                     Рассчитать стоимость: ИИ или тест
                   </button>

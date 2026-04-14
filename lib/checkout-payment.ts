@@ -2,6 +2,7 @@ import { CUSTOM_QUOTE_MAX_RUB, CUSTOM_QUOTE_MIN_RUB } from "@/lib/cart-lines";
 import { getServiceById, isValidServiceId } from "@/lib/services-catalog";
 import { appendClientPurchaseIntentMessage } from "@/lib/admin-db";
 import { getContact, isPhoneVerified, normalizePhone } from "@/lib/contacts-db";
+import { getSiteUrl } from "@/lib/site-legal";
 import { sendSmsMessage } from "@/lib/sms-sender";
 import { randomUUID } from "crypto";
 
@@ -185,7 +186,7 @@ export function paymentBypassEnabled() {
 }
 
 export function mockPaymentReturnUrl(request: Request) {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const siteUrl = getSiteUrl();
   const requestOrigin = new URL(request.url).origin;
   const baseUrl = siteUrl || requestOrigin;
   return `${baseUrl}/payment/return`;

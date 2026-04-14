@@ -1,8 +1,10 @@
 {
   "name": "TrueWeb — разработка сайтов",
   "short_name": "TrueWeb",
+  "lang": "ru",
   "description": "Разработка сайтов, лендингов и веб-сервисов. Цены в рублях на сайте.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1e1b4b",
   "theme_color": "#4f46e5",

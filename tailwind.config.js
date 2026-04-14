@@ -25,10 +25,20 @@ module.exports = {
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-20px)" }
+        },
+        "glow-pulse": {
+          "0%, 100%": { opacity: "0.45", transform: "scale(1)" },
+          "50%": { opacity: "0.85", transform: "scale(1.04)" }
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "200% center" },
+          "100%": { backgroundPosition: "-200% center" }
         }
       },
       animation: {
-        float: "float 8s ease-in-out infinite"
+        float: "float 8s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 14s ease-in-out infinite",
+        shimmer: "shimmer 3.5s linear infinite"
       }
     }
   },

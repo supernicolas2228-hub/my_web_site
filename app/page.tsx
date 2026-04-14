@@ -7,9 +7,16 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Portfolio from "@/components/Portfolio";
 import Pricing from "@/components/Pricing";
+import Reviews from "@/components/Reviews";
 import SignupPrompt from "@/components/SignupPrompt";
+import { getReviewsForHome } from "@/lib/reviews";
 
-export default function HomePage() {
+/** Случайный поднабор отзывов в карусели — не кэшировать страницу как статику. */
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const { total, carousel } = getReviewsForHome();
+
   return (
     <>
       <Header />
@@ -17,6 +24,7 @@ export default function HomePage() {
         <Hero />
         <About />
         <Pricing />
+        <Reviews carousel={carousel} total={total} />
         <Portfolio />
         <Advantages />
         <Faq />

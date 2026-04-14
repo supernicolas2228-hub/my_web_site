@@ -1,6 +1,7 @@
 import { getAdminFromRequest } from "@/lib/admin-auth";
 import { getContactBasics, saveClientMessage } from "@/lib/admin-db";
 import { isSmtpConfigured, sendEmailMessage } from "@/lib/email-sender";
+import { getSiteUrl } from "@/lib/site-legal";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
   saveClientMessage(id, "chat", text, admin.id, "saved", "outbound");
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const siteUrl = getSiteUrl();
   if (isSmtpConfigured() && siteUrl) {
     const preview = text.length > 400 ? `${text.slice(0, 400)}…` : text;
     void sendEmailMessage(

@@ -32,7 +32,6 @@ export async function POST(request: Request) {
   const data = parsed.data;
   await notifyAdminsNewOrder(data);
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
   if (paymentBypassEnabled()) {
     return NextResponse.json(mockPaymentResponse(request, data));
   }
@@ -43,13 +42,6 @@ export async function POST(request: Request) {
         error: "YooKassa is not configured",
         hint: "Add YOOKASSA_SHOP_ID and YOOKASSA_SECRET_KEY to .env (see .env.example)"
       },
-      { status: 503 }
-    );
-  }
-
-  if (!siteUrl) {
-    return NextResponse.json(
-      { error: "NEXT_PUBLIC_SITE_URL is required for payment return URL" },
       { status: 503 }
     );
   }

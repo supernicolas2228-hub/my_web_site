@@ -19,7 +19,7 @@ const services = [
 ];
 
 const cardClass =
-  "glass-card p-6 transition-transform duration-300 will-change-transform hover:-translate-y-2 hover:shadow-[0_12px_36px_rgba(99,102,241,0.25)] motion-reduce:transition-none motion-reduce:hover:translate-y-0";
+  "glass-card p-6 transition-transform duration-300 will-change-transform hover:-translate-y-2 hover:shadow-[0_12px_36px_rgba(99,102,241,0.25)]";
 
 export default function Services() {
   return (

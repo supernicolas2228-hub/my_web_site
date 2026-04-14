@@ -1,5 +1,6 @@
 import OrganizationJsonLd from "@/components/OrganizationJsonLd";
 import ClientProviders from "@/components/ClientProviders";
+import { getSiteUrl } from "@/lib/site-legal";
 import type { Metadata } from "next";
 import { Manrope, Montserrat, Syne } from "next/font/google";
 import "./globals.css";
@@ -30,7 +31,7 @@ function siteVerification(): Metadata["verification"] | undefined {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://truewebwork.ru"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "TrueWeb — разработка сайтов и веб‑сервисов",
     template: "%s — TrueWeb"
@@ -49,6 +50,11 @@ export const metadata: Metadata = {
     "создание сайта",
     "TrueWeb"
   ],
+  appleWebApp: {
+    capable: true,
+    title: "TrueWeb",
+    statusBarStyle: "default"
+  },
   openGraph: {
     type: "website",
     url: "/",
@@ -87,6 +93,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  /** Не блокируем масштаб — удобство на телефонах и доступность */
+  maximumScale: 5,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#4f46e5" },
     { media: "(prefers-color-scheme: dark)", color: "#1e1b4b" }
@@ -97,8 +108,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${syne.variable} ${manrope.variable} ${montserrat.variable} font-body antialiased`}>
-        <OrganizationJsonLd />
-        <ClientProviders>{children}</ClientProviders>
+        <div className="page-atmosphere" aria-hidden />
+        <div className="relative z-10 min-h-screen">
+          <OrganizationJsonLd />
+          <ClientProviders>{children}</ClientProviders>
+        </div>
       </body>
     </html>
   );

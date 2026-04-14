@@ -5,6 +5,7 @@ import {
   paymentBypassEnabled,
   appendPurchaseIntentForContact
 } from "@/lib/checkout-payment";
+import { getSiteUrl } from "@/lib/site-legal";
 import { createYooKassaConfirmationUrl, isYooKassaConfigured } from "@/lib/yookassa-client";
 import { NextResponse } from "next/server";
 
@@ -33,19 +34,12 @@ export async function POST(request: Request) {
   const data = parsed.data;
   await notifyAdminsNewOrder(data);
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
+  const siteUrl = getSiteUrl();
   const requestOrigin = new URL(request.url).origin;
   const baseUrl = siteUrl || requestOrigin;
 
   if (paymentBypassEnabled()) {
     return NextResponse.json(mockPaymentResponse(request, data));
-  }
-
-  if (!siteUrl) {
-    return NextResponse.json(
-      { error: "NEXT_PUBLIC_SITE_URL is required for payment URLs", hint: "Укажите публичный URL сайта в .env" },
-      { status: 503 }
-    );
   }
 
   if (!isYooKassaConfigured()) {

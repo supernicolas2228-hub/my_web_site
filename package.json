@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:lan": "next dev -H 0.0.0.0 -p 3000",
-    "build": "next build",
+    "sync-reviews": "node scripts/sync-reviews.mjs",
+    "dev": "node scripts/sync-reviews.mjs && next dev -p 3000",
+    "dev:127": "node scripts/sync-reviews.mjs && next dev -H 127.0.0.1 -p 3000",
+    "dev:lan": "node scripts/sync-reviews.mjs && next dev -H 0.0.0.0 -p 3000",
+    "build": "node scripts/sync-reviews.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
     "deploy:vps": "python deploy/full-deploy-vps.py",
     "deploy:vps:eu": "python deploy/full-deploy-vps.py eu",
     "deploy:vps:ru": "python deploy/full-deploy-vps.py ru",
+    "dns:netangels": "node deploy/netangels-dns-one-ip.mjs",
+    "dns:netangels:dry": "node deploy/netangels-dns-one-ip.mjs --dry-run",
+    "dns:netangels:list": "node deploy/netangels-dns-one-ip.mjs --list",
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
