@@ -5,6 +5,12 @@
 /** Публичный канонический хост в проде — совпадает с рабочим DNS у мобильных клиентов. */
 export const DEFAULT_PUBLIC_SITE_URL = "https://www.truewebwork.ru";
 
+/** Имя хоста без www (редирект на канонический URL в middleware и в клиентском fallback). */
+export const APEX_PUBLIC_HOST = "truewebwork.ru";
+
+/** Канонический хост с www (без схемы). */
+export const CANONICAL_WWW_HOST = "www.truewebwork.ru";
+
 const LEGACY_APEX_PUBLIC_URL = "https://truewebwork.ru";
 
 export function getSiteUrl(): string {

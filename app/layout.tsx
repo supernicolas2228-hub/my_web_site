@@ -1,3 +1,4 @@
+import ApexToWwwRedirect from "@/components/ApexToWwwRedirect";
 import OrganizationJsonLd from "@/components/OrganizationJsonLd";
 import ClientProviders from "@/components/ClientProviders";
 import { getSiteUrl } from "@/lib/site-legal";
@@ -33,21 +34,24 @@ function siteVerification(): Metadata["verification"] | undefined {
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "TrueWeb — разработка сайтов и веб‑сервисов",
+    default: "TrueWeb — создание сайтов и Telegram‑ботов под ключ",
     template: "%s — TrueWeb"
   },
-  description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов. Быстрый запуск, поддержка и рост продаж.",
-  alternates: {
-    canonical: "/"
-  },
+  description:
+    "Создание сайтов под ключ, интернет‑магазинов и разработка ботов для Telegram. Лендинги, каталоги, оплата онлайн, запуск и поддержка — TrueWeb.",
   applicationName: "TrueWeb",
   keywords: [
+    "создание сайтов",
+    "создание сайта под ключ",
     "разработка сайтов",
-    "сайт под ключ",
+    "заказать сайт",
     "лендинг",
-    "интернет-магазин",
-    "веб-разработка",
-    "создание сайта",
+    "интернет магазин под ключ",
+    "telegram бот",
+    "создание ботов телеграм",
+    "разработка telegram бота",
+    "чат бот",
+    "веб разработка",
     "TrueWeb"
   ],
   appleWebApp: {
@@ -58,16 +62,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
-    title: "TrueWeb — разработка сайтов и веб‑сервисов",
-    description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов. Быстрый запуск и поддержка.",
+    title: "TrueWeb — создание сайтов и Telegram‑ботов под ключ",
+    description:
+      "Создание сайтов и разработка Telegram‑ботов: лендинги, магазины, автоматизация заявок и оплат. Запуск и поддержка.",
     siteName: "TrueWeb",
     locale: "ru_RU",
     images: [{ url: "/og-image.svg", width: 1200, height: 630, alt: "TrueWeb" }]
   },
   twitter: {
     card: "summary_large_image",
-    title: "TrueWeb — разработка сайтов и веб‑сервисов",
-    description: "Разработка сайтов под ключ, интернет‑магазинов и веб‑сервисов.",
+    title: "TrueWeb — создание сайтов и Telegram‑ботов под ключ",
+    description: "Создание сайтов под ключ и разработка ботов в Telegram. Запуск, сопровождение, честные сроки.",
     images: ["/og-image.svg"]
   },
   manifest: "/site.webmanifest",
@@ -108,6 +113,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ru" suppressHydrationWarning>
       <body className={`${syne.variable} ${manrope.variable} ${montserrat.variable} font-body antialiased`}>
+        <ApexToWwwRedirect />
         <div className="page-atmosphere" aria-hidden />
         <div className="relative z-10 min-h-screen">
           <OrganizationJsonLd />

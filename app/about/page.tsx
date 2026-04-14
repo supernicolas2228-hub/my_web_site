@@ -7,7 +7,8 @@ import Header from "@/components/Header";
 export const metadata: Metadata = {
   title: "О нас | TrueWeb",
   description:
-    "True Web — сайты, которые работают на бизнес: веб-дизайн, UX/UI и продающие цифровые решения от команды TrueWeb."
+    "True Web — сайты, которые работают на бизнес: веб-дизайн, UX/UI и продающие цифровые решения от команды TrueWeb.",
+  alternates: { canonical: "/about" }
 };
 
 export default function AboutFullPage() {

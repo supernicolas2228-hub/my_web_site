@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseAdminTokenFromCookieHeader } from "@/lib/admin-session-cookie";
-
-const APEX_HOST = "truewebwork.ru";
-const CANONICAL_WWW_HOST = "www.truewebwork.ru";
+import { APEX_PUBLIC_HOST, CANONICAL_WWW_HOST } from "@/lib/site-legal";
 
 /** Edge-safe gate: session is validated on API routes (SQLite). */
 function hasPlausibleSessionToken(cookieHeader: string | null) {
@@ -19,7 +17,7 @@ function primaryHost(hostHeader: string | null) {
 export function middleware(request: NextRequest) {
   const host = primaryHost(request.headers.get("host"));
 
-  if (host === APEX_HOST) {
+  if (host === APEX_PUBLIC_HOST) {
     const dest = new URL(
       `${request.nextUrl.pathname}${request.nextUrl.search}`,
       `https://${CANONICAL_WWW_HOST}`

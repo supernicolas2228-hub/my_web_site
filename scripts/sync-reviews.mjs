@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Собирает content/reviews/*.md|txt → data/reviews.json (один источник для бандла).
- * Запускается перед next build / next dev — на сервере во время работы сайта fs к папке не нужен.
+ * 1) Тянет отзывы из публичной папки «Все отзывы» на Яндекс.Диске (внутри портфолио) — .docx.
+ * 2) Иначе — content/reviews/*.md|txt
+ * Пишет data/reviews.json для бандла Next.js.
  */
 import fs from "fs";
 import path from "path";
@@ -12,26 +13,11 @@ const ROOT = path.join(__dirname, "..");
 const REVIEWS_DIR = path.join(ROOT, "content", "reviews");
 const OUT = path.join(ROOT, "data", "reviews.json");
 
-const DEFAULT = [
-  {
-    id: "01-mariya-salon",
-    author: "Мария, сеть салонов красоты",
-    body:
-      "Заказывали лендинг под акцию и запись онлайн. Сроки выдержали, правки вносили быстро. После запуска стало проще собирать заявки из соцсетей — рекомендую, если нужен понятный результат без лишней возни."
-  },
-  {
-    id: "02-aleksey-opt",
-    author: "Алексей, оптовые поставки",
-    body:
-      "Нужен был простой каталог с формой «запросить прайс». Сделали аккуратно, на телефоне всё читается, клиенты перестали теряться в переписке. Отдельное спасибо за то, что объяснили, что к чему, без «магии»."
-  },
-  {
-    id: "03-studio-startup",
-    author: "Команда небольшого стартапа",
-    body:
-      "Искали подрядчика на первую версию продукта: визитка + пару экранов с описанием и кнопкой. Получилось ровно то, что обещали на старте, без раздувания бюджета. Если понадобится развивать дальше — вернёмся."
-  }
-];
+/** Публичная ссылка на корень «Портфолио» (как на сайте). */
+const YANDEX_PORTFOLIO_PUBLIC =
+  process.env.YANDEX_PORTFOLIO_PUBLIC?.trim() || "https://disk.yandex.ru/d/ZDM9-AR8LwjYWw";
+/** Папка с отзывами внутри шаринга. */
+const YANDEX_REVIEWS_FOLDER = "/Все отзывы";
 
 function isReviewFile(name) {
   const lower = name.toLowerCase();
@@ -55,18 +41,72 @@ function parseReviewRaw(raw, id) {
   return { id, author: "Клиент", body: text };
 }
 
-function main() {
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+function slugId(name) {
+  return (
+    name
+      .replace(/\.(docx|DOCX|md|txt)$/i, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^\-\u0400-\u04FFa-zA-Z0-9]/g, "")
+      .slice(0, 80) || "review"
+  );
+}
 
-  if (!fs.existsSync(REVIEWS_DIR)) {
-    fs.writeFileSync(OUT, JSON.stringify(DEFAULT, null, 2), "utf-8");
-    console.log("sync-reviews: нет content/reviews → data/reviews.json (дефолт)");
-    return;
+async function fetchYandexFolder(publicKey, folderPath) {
+  const params = new URLSearchParams({
+    public_key: publicKey,
+    path: folderPath,
+    limit: "100"
+  });
+  const url = `https://cloud-api.yandex.net/v1/disk/public/resources?${params.toString()}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) {
+    throw new Error(`Yandex API ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
+  return res.json();
+}
 
+async function docxToText(buffer) {
+  const mammoth = await import("mammoth");
+  const { value } = await mammoth.extractRawText({ buffer });
+  return value.replace(/\r\n/g, "\n").trim();
+}
+
+async function syncFromYandex() {
+  const data = await fetchYandexFolder(YANDEX_PORTFOLIO_PUBLIC, YANDEX_REVIEWS_FOLDER);
+  const items = data?._embedded?.items ?? [];
+  const docxFiles = items.filter(
+    (it) => it.type === "file" && /\.docx$/i.test(it.name || "") && it.file
+  );
+  docxFiles.sort((a, b) => (a.name || "").localeCompare(b.name || "", "ru"));
+
+  const records = [];
+  for (const it of docxFiles) {
+    const downloadUrl = it.file;
+    const res = await fetch(downloadUrl);
+    if (!res.ok) continue;
+    const buf = Buffer.from(await res.arrayBuffer());
+    let body = "";
+    try {
+      body = await docxToText(buf);
+    } catch {
+      continue;
+    }
+    if (!body.length) continue;
+    const baseName = (it.name || "").replace(/\.docx$/i, "");
+    records.push({
+      id: slugId(it.name || "review"),
+      author: baseName || "Отзыв",
+      body
+    });
+  }
+  return records;
+}
+
+function syncFromLocalMarkdown() {
+  if (!fs.existsSync(REVIEWS_DIR)) return [];
   const names = fs.readdirSync(REVIEWS_DIR).filter(isReviewFile);
   names.sort((a, b) => a.localeCompare(b, "ru"));
-
   const records = [];
   for (const name of names) {
     const id = name.replace(/\.(md|txt)$/i, "");
@@ -75,10 +115,38 @@ function main() {
     const r = parseReviewRaw(raw, id);
     if (r.body.length) records.push(r);
   }
-
-  const final = records.length > 0 ? records : DEFAULT;
-  fs.writeFileSync(OUT, JSON.stringify(final, null, 2), "utf-8");
-  console.log(`sync-reviews: ${final.length} отзыв(ов) → data/reviews.json`);
+  return records;
 }
 
-main();
+async function main() {
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+
+  let final = [];
+  let source = "";
+
+  if (process.env.SKIP_YANDEX_REVIEWS === "1") {
+    console.log("sync-reviews: SKIP_YANDEX_REVIEWS=1");
+  } else {
+    try {
+      final = await syncFromYandex();
+      if (final.length) source = "Яндекс.Диск «Все отзывы»";
+    } catch (e) {
+      console.warn("sync-reviews: Яндекс —", e.message || e);
+    }
+  }
+
+  if (!final.length) {
+    final = syncFromLocalMarkdown();
+    if (final.length) source = "content/reviews";
+  }
+
+  fs.writeFileSync(OUT, JSON.stringify(final, null, 2), "utf-8");
+  console.log(
+    `sync-reviews: ${final.length} отзыв(ов) → data/reviews.json` + (source ? ` (${source})` : "")
+  );
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

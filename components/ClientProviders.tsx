@@ -1,5 +1,7 @@
 "use client";
 
+import AnalyticsCartBridge from "@/components/AnalyticsCartBridge";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { CalculatorProvider } from "@/context/CalculatorContext";
 import { CartProvider } from "@/context/CartContext";
 import { MotionConfig } from "framer-motion";
@@ -11,7 +13,11 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <ThemeProvider>
         <CalculatorProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <AnalyticsTracker />
+            {children}
+            <AnalyticsCartBridge />
+          </CartProvider>
         </CalculatorProvider>
       </ThemeProvider>
     </MotionConfig>

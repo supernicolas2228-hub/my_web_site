@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -312,6 +313,12 @@ export default function AdminMessenger() {
             <h1 className="text-lg font-bold sm:text-xl">Клиенты</h1>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/analytics"
+              className="rounded-lg border border-indigo-400/40 bg-indigo-500/20 px-3 py-1.5 text-sm hover:bg-indigo-500/30"
+            >
+              Аналитика
+            </Link>
             <button
               type="button"
               onClick={() => void loadClients()}

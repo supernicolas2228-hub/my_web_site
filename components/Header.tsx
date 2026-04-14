@@ -8,10 +8,10 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const navItems = [
+  { href: "/#directions", label: "Услуги" },
   { href: "/#about", label: "О нас" },
   { href: "/#pricing", label: "Наши продукты" },
   { href: "/#reviews", label: "Отзывы" },
-  { href: "/#portfolio", label: "Наше портфолио" },
   { href: "/#advantages", label: "Почему мы" },
   { href: "/#faq", label: "Вопросы и ответы" },
   { href: "/#contacts", label: "Контакты" }

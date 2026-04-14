@@ -20,9 +20,12 @@ export default function Hero() {
       <div className="hero-intro glass-card hero-card-glow relative z-10 mx-auto w-full max-w-4xl px-5 py-12 text-center sm:px-6 md:px-10">
         <h1 className="font-heading text-4xl font-extrabold leading-tight sm:text-5xl md:text-6xl">
           <span className="hero-gradient-text">TrueWeb</span>
+          <span className="mt-3 block max-w-3xl text-[1.35rem] font-bold leading-snug tracking-tight text-slate-800 dark:text-white sm:text-2xl md:mt-4 md:text-3xl">
+            Создание сайтов и ботов для Telegram под ключ
+          </span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-base text-slate-700 dark:text-white md:text-lg">
-          Создаём продукты для роста вашего бизнеса.
+          Лендинги, многостраничные сайты, интернет‑магазины и автоматизация в мессенджере — от идеи до запуска.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <a href="/#about" className={cta}>

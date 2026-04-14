@@ -1,12 +1,10 @@
 import Reveal from "@/components/motion/Reveal";
 import { PORTFOLIO_GOOGLE_DRIVE_URL, PORTFOLIO_YANDEX_DISK_URL } from "@/lib/portfolio-links";
+import { sectionJumpLinkClass } from "@/lib/section-jump-link";
 
 export default function Portfolio() {
   const linkClass =
     "glass-card group relative inline-flex min-h-16 w-full items-center justify-center overflow-hidden rounded-2xl px-8 py-5 text-center text-lg font-semibold transition-all duration-300 will-change-transform hover:scale-[1.02] hover:border-indigo-400/35 hover:shadow-[0_0_32px_rgba(99,102,241,0.35)] active:scale-[0.98] md:text-xl";
-
-  const reviewsJumpClass =
-    "glass-card group relative inline-flex min-h-14 w-full max-w-md items-center justify-center overflow-hidden rounded-2xl border-2 border-indigo-400/40 px-6 py-4 text-center text-base font-bold text-indigo-800 shadow-[0_0_24px_rgba(99,102,241,0.2)] transition-all duration-300 will-change-transform hover:scale-[1.02] hover:border-indigo-400/60 hover:shadow-[0_0_32px_rgba(99,102,241,0.35)] active:scale-[0.98] dark:border-indigo-400/35 dark:text-indigo-100 dark:shadow-indigo-950/40 md:text-lg";
 
   return (
     <section id="portfolio" className="section-space px-3 sm:px-4">
@@ -20,11 +18,10 @@ export default function Portfolio() {
             Google Drive.
           </p>
         </Reveal>
-        <div className="mt-8 flex justify-center">
+        <div className="mt-5 flex justify-center">
           <Reveal delay={0.06}>
-            <a href="#reviews" className={reviewsJumpClass}>
-              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-fuchsia-500/10 to-sky-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              <span className="relative">↑ К отзывам клиентов</span>
+            <a href="#reviews" className={sectionJumpLinkClass}>
+              ↑ К отзывам
             </a>
           </Reveal>
         </div>

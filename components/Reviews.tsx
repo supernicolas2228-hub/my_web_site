@@ -5,6 +5,7 @@ import {
   PORTFOLIO_GOOGLE_DRIVE_URL,
   PORTFOLIO_YANDEX_DISK_URL
 } from "@/lib/portfolio-links";
+import { sectionJumpLinkClass } from "@/lib/section-jump-link";
 import type { ReviewRecord } from "@/lib/review-types";
 import { REVIEWS_CAROUSEL_MAX } from "@/lib/review-types";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
@@ -91,8 +92,8 @@ export default function Reviews({
               {total === 0 ? "ещё нет загруженных отзывов" : `${total} ${reviewsWord(total)}`}
             </span>
             {total === 0
-              ? " — добавьте текстовые файлы в папку отзывов в проекте."
-              : " — те же формулировки, что в папке «Отзывы» внутри нашего портфолио на Яндекс.Диске и Google Drive."}{" "}
+              ? " — при сборке подтягиваются файлы из папки «Все отзывы» на Яндекс.Диске или из content/reviews."
+              : " — тексты из папки «Все отзывы» в портфолио на Яндекс.Диске (и дубли на Google Drive при необходимости)."}{" "}
             <a
               href={PORTFOLIO_YANDEX_DISK_URL}
               target="_blank"
@@ -185,16 +186,16 @@ export default function Reviews({
         )}
 
         <Reveal delay={0.12}>
-          <div className="mt-14 flex flex-col items-center gap-3">
-            <p className="max-w-xl text-center text-base text-black/85 dark:text-white/90">
-              Ниже — наше портфолио: загляните в примеры работ или откройте полные материалы на Диске.
+          <div className="mt-10 flex flex-col items-center gap-2">
+            <p className="max-w-xl text-center text-sm text-black/85 dark:text-white/90 md:text-base">
+              Ниже — портфолио: примеры и ссылки на Диск.
             </p>
-            <a
-              href="#portfolio"
-              className="group inline-flex flex-col items-center gap-1 rounded-xl px-4 py-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-500 dark:text-indigo-300 dark:hover:text-indigo-200"
-            >
+            <a href="#portfolio" className={`${sectionJumpLinkClass} flex-col gap-0 py-1`}>
               <span>К портфолио</span>
-              <ChevronDown className="h-6 w-6 animate-bounce motion-reduce:animate-none" aria-hidden />
+              <ChevronDown
+                className="h-3.5 w-3.5 shrink-0 animate-bounce motion-reduce:animate-none"
+                aria-hidden
+              />
             </a>
           </div>
         </Reveal>

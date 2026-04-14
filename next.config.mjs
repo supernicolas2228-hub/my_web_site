@@ -1,5 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Дубль редиректа apex → www (вместе с middleware): если запрос дошёл до Next с Host без www.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "truewebwork.ru" }],
+        destination: "https://www.truewebwork.ru/:path*",
+        permanent: true,
+        basePath: false
+      }
+    ];
+  },
   images: {
     remotePatterns: [
       {

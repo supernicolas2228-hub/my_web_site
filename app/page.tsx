@@ -8,11 +8,26 @@ import Hero from "@/components/Hero";
 import Portfolio from "@/components/Portfolio";
 import Pricing from "@/components/Pricing";
 import Reviews from "@/components/Reviews";
+import SeoDirections from "@/components/SeoDirections";
 import SignupPrompt from "@/components/SignupPrompt";
 import { getReviewsForHome } from "@/lib/reviews";
+import type { Metadata } from "next";
 
 /** Случайный поднабор отзывов в карусели — не кэшировать страницу как статику. */
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Создание сайтов и Telegram‑ботов под ключ",
+  description:
+    "TrueWeb: создание сайтов, лендингов и интернет‑магазинов, разработка Telegram‑ботов. Цены на сайте, запуск и поддержка.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    url: "/",
+    title: "TrueWeb — создание сайтов и Telegram‑ботов под ключ",
+    description:
+      "Студия веб‑разработки: сайты под ключ и чат‑боты в Telegram. Прозрачные сроки и сопровождение после запуска."
+  }
+};
 
 export default async function HomePage() {
   const { total, carousel } = getReviewsForHome();
@@ -22,6 +37,7 @@ export default async function HomePage() {
       <Header />
       <main>
         <Hero />
+        <SeoDirections />
         <About />
         <Pricing />
         <Reviews carousel={carousel} total={total} />

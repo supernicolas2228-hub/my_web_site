@@ -7,7 +7,8 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Часто задаваемые вопросы",
   description:
-    "Что такое воронка продаж, лендинг, сайт под ключ, хостинг и домен — объясняем очень простыми словами. TrueWeb."
+    "Что такое воронка продаж, лендинг, сайт под ключ, хостинг и домен — объясняем очень простыми словами. TrueWeb.",
+  alternates: { canonical: "/faq" }
 };
 
 export default function FaqPage() {

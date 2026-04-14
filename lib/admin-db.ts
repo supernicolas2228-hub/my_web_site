@@ -12,7 +12,7 @@ type AdminUserRow = { id: number; email: string; password_hash: string };
 
 export type AdminPasswordCheckResult =
   | { ok: true; adminUserId: number; email: string; phone: string }
-  | { ok: false; reason: "unknown_email" | "wrong_password" | "invalid_phone" | "phone_mismatch" };
+  | { ok: false; reason: "unknown_email" | "wrong_password" | "phone_mismatch" };
 
 export type Admin2faCompleteResult =
   | { ok: true; token: string; adminUserId: number; expiresAt: string; email: string }
@@ -196,12 +196,20 @@ export function ensureAdminBootstrap() {
   }
 }
 
+/**
+ * Вход в админку: три строки должны совпасть с .env — без проверки «формата» телефона/почты.
+ * ADMIN_EMAIL + ADMIN_PASSWORD + (ADMIN_LOGIN_PHONE или ADMIN_PHONE) посимвольно как задано (после trim).
+ */
 export function adminVerifyPasswordFor2fa(emailRaw: string, password: string, phoneRaw: string): AdminPasswordCheckResult {
   ensureAdminBootstrap();
+  const expectedEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
   const email = emailRaw.trim().toLowerCase();
-  const phoneInput = normalizePhone(phoneRaw.trim());
-  if (phoneInput.length !== 11 || !phoneInput.startsWith("7")) {
-    return { ok: false as const, reason: "invalid_phone" };
+  if (!expectedEmail || email !== expectedEmail) {
+    return { ok: false as const, reason: "unknown_email" };
+  }
+  const expectedPhone = (process.env.ADMIN_LOGIN_PHONE ?? process.env.ADMIN_PHONE ?? "").trim();
+  if (!expectedPhone || phoneRaw.trim() !== expectedPhone) {
+    return { ok: false as const, reason: "phone_mismatch" };
   }
   const database = getDb();
   const row = database
@@ -209,12 +217,19 @@ export function adminVerifyPasswordFor2fa(emailRaw: string, password: string, ph
     .get(email) as (AdminUserRow & { phone: string }) | undefined;
   if (!row) return { ok: false as const, reason: "unknown_email" };
   if (!verifyPassword(password, row.password_hash)) return { ok: false as const, reason: "wrong_password" };
-  const envPhone = resolveAdminPhoneFromEnv();
-  const expectedPhone = normalizePhone((row.phone || "").trim()) || envPhone;
-  if (expectedPhone && expectedPhone !== phoneInput) {
-    return { ok: false as const, reason: "phone_mismatch" };
-  }
-  return { ok: true as const, adminUserId: row.id, email: row.email, phone: expectedPhone || phoneInput };
+  return { ok: true as const, adminUserId: row.id, email: row.email, phone: expectedPhone };
+}
+
+export function createAdminSession(adminUserId: number): { token: string; expiresAt: string } {
+  ensureAdminBootstrap();
+  const database = getDb();
+  const token = randomBytes(32).toString("hex");
+  const sessionTokenHash = sha256(token);
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  database
+    .prepare("INSERT INTO admin_sessions (admin_user_id, session_token_hash, expires_at) VALUES (?, ?, ?)")
+    .run(adminUserId, sessionTokenHash, expiresAt);
+  return { token, expiresAt };
 }
 
 export function deleteAdmin2faChallengesForUser(adminUserId: number) {
