@@ -6,11 +6,21 @@ import type { CartLine, CustomCartLine } from "@/lib/cart-lines";
 import { CUSTOM_QUOTE_MAX_RUB, CUSTOM_QUOTE_MIN_RUB, lineStableKey, parseCartLine } from "@/lib/cart-lines";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode
+} from "react";
 
 function CartAddedDialog({ title, onClose }: { title: string; onClose: () => void }) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && resolvedTheme === "dark";
   const ui = useMemo(() => {
     return {
       overlay: isDark ? "bg-black/55" : "bg-black/40",
@@ -97,11 +107,8 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function loadFromStorage(): CartLine[] {
-  if (typeof window === "undefined") return [];
+function parseStoredLines(raw: string): CartLine[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
     const out: CartLine[] = [];
@@ -112,6 +119,36 @@ function loadFromStorage(): CartLine[] {
     return out;
   } catch {
     return [];
+  }
+}
+
+/** localStorage + sessionStorage: на части мобильных WebView из поиска localStorage режется — дублируем. */
+function loadFromStorage(): CartLine[] {
+  if (typeof window === "undefined") return [];
+  for (const storage of [localStorage, sessionStorage]) {
+    try {
+      const raw = storage.getItem(STORAGE_KEY);
+      if (!raw) continue;
+      const lines = parseStoredLines(raw);
+      if (lines.length > 0) return lines;
+    } catch {
+      /* private mode / квота / блокировка */
+    }
+  }
+  return [];
+}
+
+function saveToStorage(lines: CartLine[]) {
+  const json = JSON.stringify(lines);
+  try {
+    localStorage.setItem(STORAGE_KEY, json);
+  } catch {
+    /* ignore */
+  }
+  try {
+    sessionStorage.setItem(STORAGE_KEY, json);
+  } catch {
+    /* ignore */
   }
 }
 
@@ -126,8 +163,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== STORAGE_KEY || e.newValue == null) return;
+      setLines(parseStoredLines(e.newValue));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [hydrated]);
+
+  useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+    saveToStorage(lines);
   }, [lines, hydrated]);
 
   const resolvedLines = useMemo(() => {

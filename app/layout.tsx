@@ -3,22 +3,22 @@ import OrganizationJsonLd from "@/components/OrganizationJsonLd";
 import ClientProviders from "@/components/ClientProviders";
 import { getSiteUrl } from "@/lib/site-legal";
 import type { Metadata } from "next";
-import { Manrope, Montserrat, Syne } from "next/font/google";
+import { Manrope, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-syne"
-});
-
+/** Syne без кириллицы — на телефонах заголовки выглядели «чужим» системным шрифтом. Заголовки = Montserrat (cyrillic). */
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-manrope"
+  variable: "--font-manrope",
+  display: "swap",
+  adjustFontFallback: true
 });
 
 const montserrat = Montserrat({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-montserrat"
+  variable: "--font-montserrat",
+  display: "swap",
+  adjustFontFallback: true
 });
 
 function siteVerification(): Metadata["verification"] | undefined {
@@ -91,8 +91,13 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: {
       index: true,
-      follow: true
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1
     }
+  },
+  formatDetection: {
+    telephone: false
   },
   verification: siteVerification()
 };
@@ -112,7 +117,7 @@ export const viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body className={`${syne.variable} ${manrope.variable} ${montserrat.variable} font-body antialiased`}>
+      <body className={`${manrope.variable} ${montserrat.variable} font-body antialiased`}>
         <ApexToWwwRedirect />
         <div className="page-atmosphere" aria-hidden />
         <div className="relative z-10 min-h-screen">

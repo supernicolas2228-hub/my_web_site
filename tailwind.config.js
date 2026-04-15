@@ -18,8 +18,8 @@ module.exports = {
         glass: "0 8px 32px rgba(0,0,0,0.12)"
       },
       fontFamily: {
-        heading: ["var(--font-syne)", "sans-serif"],
-        body: ["var(--font-manrope)", "sans-serif"]
+        heading: ["var(--font-montserrat)", "var(--font-manrope)", "system-ui", "sans-serif"],
+        body: ["var(--font-manrope)", "system-ui", "sans-serif"]
       },
       keyframes: {
         float: {

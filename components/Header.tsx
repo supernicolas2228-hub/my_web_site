@@ -2,7 +2,7 @@
 
 import { useCart } from "@/context/CartContext";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, Moon, ShoppingCart, Sun, X } from "lucide-react";
+import { Menu, Moon, ShoppingCart, Sun, User, X } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -68,6 +68,14 @@ export default function Header() {
             className="header-pill hidden h-11 items-center whitespace-nowrap rounded-xl px-2.5 text-sm font-semibold leading-none text-slate-900 opacity-95 hover:bg-white/15 dark:text-white lg:inline-flex xl:px-3"
           >
             Личный кабинет
+          </Link>
+
+          <Link
+            href="/account"
+            className={`group ${iconBtnClass} text-slate-900 dark:text-white lg:hidden`}
+            aria-label="Личный кабинет"
+          >
+            <User size={18} className="transition-transform duration-200 group-hover:scale-110" />
           </Link>
 
           <Link
