@@ -6,10 +6,12 @@
 
 name: Deploy VPS
 
-# Запуск вручную: вкладка Actions → Deploy VPS → Run workflow (после добавления секретов).
-# Чтобы деплоить при каждом push, добавьте сюда: push: branches: [main]
+# Автодепой при push в main (нужны секреты VPS_*). Вручную: Actions → Deploy VPS → Run workflow.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
