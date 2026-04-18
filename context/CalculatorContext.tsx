@@ -72,6 +72,7 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [extraSeo, setExtraSeo] = useState(false);
   const [extraIntegrations, setExtraIntegrations] = useState(false);
   const [extraMultilang, setExtraMultilang] = useState(false);
+  const [extraSalesFunnel, setExtraSalesFunnel] = useState(false);
 
   const openCalculator = useCallback((options?: OpenCalculatorOptions) => {
     setCalculatorMode(options?.startWithTest ? "test" : "chooser");
@@ -139,6 +140,8 @@ export function CalculatorProvider({ children }: { children: ReactNode }) {
           setExtraIntegrations={setExtraIntegrations}
           extraMultilang={extraMultilang}
           setExtraMultilang={setExtraMultilang}
+          extraSalesFunnel={extraSalesFunnel}
+          setExtraSalesFunnel={setExtraSalesFunnel}
         />
       )}
     </CalculatorContext.Provider>
@@ -193,6 +196,8 @@ type ModalProps = {
   setExtraIntegrations: (v: boolean) => void;
   extraMultilang: boolean;
   setExtraMultilang: (v: boolean) => void;
+  extraSalesFunnel: boolean;
+  setExtraSalesFunnel: (v: boolean) => void;
 };
 
 function CostCalculatorModal(props: ModalProps) {
@@ -241,7 +246,9 @@ function CostCalculatorModal(props: ModalProps) {
     extraIntegrations,
     setExtraIntegrations,
     extraMultilang,
-    setExtraMultilang
+    setExtraMultilang,
+    extraSalesFunnel,
+    setExtraSalesFunnel
   } = props;
 
   const estimatedPrice = useMemo(() => {
@@ -336,6 +343,7 @@ function CostCalculatorModal(props: ModalProps) {
     if (extraSeo) total += 5000;
     if (extraIntegrations) total += 7000;
     if (extraMultilang) total += 4500;
+    if (extraSalesFunnel) total += 10000;
     return total;
   }, [
     botFlows,
@@ -347,6 +355,7 @@ function CostCalculatorModal(props: ModalProps) {
     designLevel,
     extraIntegrations,
     extraMultilang,
+    extraSalesFunnel,
     extraSeo,
     landingFunnel,
     mainGoal,
@@ -698,6 +707,14 @@ function CostCalculatorModal(props: ModalProps) {
                   onChange={(e) => setExtraMultilang(e.target.checked)}
                 />
                 Мультиязычность
+              </label>
+              <label className={ui.checkLabel}>
+                <input
+                  type="checkbox"
+                  checked={extraSalesFunnel}
+                  onChange={(e) => setExtraSalesFunnel(e.target.checked)}
+                />
+                Воронка продаж
               </label>
             </fieldset>
 
