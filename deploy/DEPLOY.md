@@ -7,7 +7,8 @@
 1. На VPS один раз нужен **нормальный git-клон** проекта в `/var/www/business-card-site`.
 2. В GitHub: **Settings → Secrets and variables → Actions** добавьте `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
 3. После этого основной сценарий такой: **push в `main` -> GitHub Actions -> `git fetch/reset` на сервере -> `bash deploy/server-build.sh`**.
-4. Вручную можно запустить тот же workflow: **Actions → Deploy VPS → Run workflow**.
+4. На самом сервере есть дополнительный авто-деплой по timer: он раз в минуту проверяет `origin/main` и, если там новый commit, сам запускает `deploy/server-build.sh`.
+5. Вручную можно запустить GitHub workflow: **Actions → Deploy VPS → Run workflow**.
 
 Опциональный секрет `VPS_PATH` — если проект не в `/var/www/business-card-site`.
 
@@ -100,9 +101,20 @@ sudo certbot --nginx -d твой-домен.ru
 
 ---
 
-## 4. Запасной ручной деплой
+## 4. Авто-деплой на сервере
 
-Если GitHub Actions временно недоступен, на сервере достаточно одной команды:
+Если GitHub Actions временно недоступен или секреты в GitHub ещё не идеальны, сервер всё равно может обновляться сам: timer `truewebwork-autodeploy.timer` раз в минуту проверяет `origin/main`.
+
+Проверка на сервере:
+
+```bash
+systemctl status truewebwork-autodeploy.timer --no-pager
+journalctl -u truewebwork-autodeploy.service -n 50 --no-pager
+```
+
+## 5. Запасной ручной деплой
+
+Если нужен ручной fallback, на сервере достаточно одной команды:
 
 ```bash
 cd /var/www/business-card-site && bash deploy/full-refresh-production.sh
@@ -114,9 +126,11 @@ cd /var/www/business-card-site && bash deploy/full-refresh-production.sh
 
 ---
 
-## 5. После каждого обновления сайта
+## 6. После каждого обновления сайта
 
 Нормальный сценарий: просто сделать `push` в `main`.
+
+Обычно дальше сработает либо GitHub Actions, либо серверный auto-deploy timer.
 
 Если нужен ручной fallback:
 
@@ -126,7 +140,7 @@ cd /var/www/business-card-site && bash deploy/full-refresh-production.sh
 
 ---
 
-## 6. Проблемы
+## 7. Проблемы
 
 | Симптом | Что проверить |
 |--------|----------------|

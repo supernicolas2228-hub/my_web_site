@@ -1,0 +1,12 @@
+[Unit]
+Description=Run TrueWeb auto-deploy every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=10s
+Persistent=true
+Unit=truewebwork-autodeploy.service
+
+[Install]
+WantedBy=timers.target

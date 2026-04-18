@@ -1,0 +1,9 @@
+[Unit]
+Description=TrueWeb auto-deploy from origin/main
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/business-card-site
+ExecStart=/usr/local/bin/truewebwork-autodeploy

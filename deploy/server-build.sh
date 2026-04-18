@@ -43,6 +43,13 @@ install -m 644 deploy/truewebwork-watchdog.timer /etc/systemd/system/truewebwork
 systemctl daemon-reload
 systemctl enable --now truewebwork-watchdog.timer
 
+echo "==> autodeploy timer"
+install -m 755 deploy/server-autodeploy.sh /usr/local/bin/truewebwork-autodeploy
+install -m 644 deploy/truewebwork-autodeploy.service /etc/systemd/system/truewebwork-autodeploy.service
+install -m 644 deploy/truewebwork-autodeploy.timer /etc/systemd/system/truewebwork-autodeploy.timer
+systemctl daemon-reload
+systemctl enable --now truewebwork-autodeploy.timer
+
 echo "==> logrotate"
 install -m 644 deploy/truewebwork-logrotate /etc/logrotate.d/truewebwork
 
