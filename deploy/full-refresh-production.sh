@@ -6,6 +6,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+if [[ ! -d .git ]]; then
+  echo "ERROR: $(pwd) is not a git repository."
+  echo "Bootstrap once with: git clone <repo> /var/www/business-card-site"
+  exit 1
+fi
+
 git fetch origin main
 git reset --hard origin/main
 

@@ -1,0 +1,12 @@
+/var/log/nginx/truewebwork.access.log
+/var/log/nginx/truewebwork.error.log
+/var/log/truewebwork/watchdog.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    create 0640 root adm
+}

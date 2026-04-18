@@ -1,0 +1,8 @@
+[Unit]
+Description=TrueWeb watchdog health check
+After=network-online.target nginx.service pm2-root.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/truewebwork-watchdog

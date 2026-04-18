@@ -29,5 +29,22 @@ else
 fi
 pm2 save
 
+echo "==> PM2 startup"
+env PATH="$PATH" pm2 startup systemd -u root --hp /root >/dev/null 2>&1 || true
+systemctl enable pm2-root >/dev/null 2>&1 || true
+
+echo "==> watchdog"
+install -m 755 deploy/server-watchdog.sh /usr/local/bin/truewebwork-watchdog
+mkdir -p /var/log/truewebwork
+touch /var/log/truewebwork/watchdog.log
+chmod 644 /var/log/truewebwork/watchdog.log || true
+install -m 644 deploy/truewebwork-watchdog.service /etc/systemd/system/truewebwork-watchdog.service
+install -m 644 deploy/truewebwork-watchdog.timer /etc/systemd/system/truewebwork-watchdog.timer
+systemctl daemon-reload
+systemctl enable --now truewebwork-watchdog.timer
+
+echo "==> logrotate"
+install -m 644 deploy/truewebwork-logrotate /etc/logrotate.d/truewebwork
+
 echo "==> Готово. Проверка: curl -sI http://127.0.0.1:3000/about | head -n1"
 curl -sI http://127.0.0.1:3000/about | head -n1 || true

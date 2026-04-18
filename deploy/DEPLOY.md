@@ -1,18 +1,19 @@
 # Деплой TrueWeb (Next.js) на VPS
 
-## Деплой из GitHub (без SSH с ПК)
+## Деплой из GitHub (основной путь)
 
 В репозитории есть workflow **Deploy VPS** (`.github/workflows/deploy-vps.yml`).
 
-1. На VPS один раз: `git clone https://github.com/ВАШ_АККАУНТ/my_web_site.git /var/www/business-card-site` и настройте `deploy/server-build.sh` / PM2 как ниже.
-2. В GitHub: **Settings → Secrets and variables → Actions** добавьте `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (приватный ключ, которым вы ходите на сервер).
-3. Вкладка **Actions → Deploy VPS → Run workflow**.
+1. На VPS один раз нужен **нормальный git-клон** проекта в `/var/www/business-card-site`.
+2. В GitHub: **Settings → Secrets and variables → Actions** добавьте `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`.
+3. После этого основной сценарий такой: **push в `main` -> GitHub Actions -> `git fetch/reset` на сервере -> `bash deploy/server-build.sh`**.
+4. Вручную можно запустить тот же workflow: **Actions → Deploy VPS → Run workflow**.
 
 Опциональный секрет `VPS_PATH` — если проект не в `/var/www/business-card-site`.
 
 ---
 
-Автоматический деплой с вашего компьютера по-прежнему требует **SSH-ключ** в `.deploy.env` (`TRUWEB_VPS_SSH_KEY=...`) или ручную заливку архива.
+Автоматический деплой с вашего компьютера по-прежнему требует **SSH-ключ** в `.deploy.env` (`TRUWEB_VPS_SSH_KEY=...`) или ручную заливку архива, но это уже запасной путь, а не основной.
 
 ## Что должно быть на сервере
 
@@ -25,31 +26,18 @@
 
 ---
 
-## 1. Залить проект с Windows
+## 1. One-time bootstrap сервера
 
-**Не заливай** `node_modules` и `.next` — их собирают на сервере.
-
-### Вариант A — архив (проще всего)
-
-1. На ПК: заархивируй папку проекта, **исключив** `node_modules` и `.next`.
-2. Загрузи архив на сервер (WinSCP / FileZilla / `scp`).
-3. На сервере:
+Если сервер ещё не в виде git-клона:
 
 ```bash
-sudo mkdir -p /var/www/business-card-site
-sudo chown -R "$USER:$USER" /var/www/business-card-site
+git clone https://github.com/ВАШ_АККАУНТ/my_web_site.git /var/www/business-card-site
 cd /var/www/business-card-site
-# распакуй архив сюда (замени имя файла)
-unzip -o ~/site.zip -d /var/www/business-card-site
+chmod +x deploy/server-build.sh
+bash deploy/server-build.sh
 ```
 
-### Вариант B — `scp` из PowerShell (если путь без проблем с кодировкой)
-
-```powershell
-scp -r "ПУТЬ\к\сайт визитка\*" root@138.124.90.218:/var/www/business-card-site/
-```
-
-Перед этим на сервере очисти старые `node_modules` / `.next` или заливай в пустую папку.
+Если на сервере уже есть рабочие `.env` и `data/`, сначала перенеси их в новый каталог.
 
 ---
 
@@ -112,29 +100,28 @@ sudo certbot --nginx -d твой-домен.ru
 
 ---
 
-## 4. Автодеплой с Windows (`npm run deploy:vps`)
+## 4. Запасной ручной деплой
 
-Нужен **Python** и `pip install paramiko`. В корне проекта файл **`.deploy.env`** (не коммитить):
+Если GitHub Actions временно недоступен, на сервере достаточно одной команды:
 
-- Если на VPS только вход по ключу (часто `PasswordAuthentication no`): укажите путь к **OpenSSH**-ключу (не `.ppk`):
-  `TRUWEB_VPS_SSH_KEY=C:\Users\Вы\.ssh\id_ed25519`
-- Ключ из PuTTY: в PuTTYgen — Conversions → Export OpenSSH key, сохраните файл и пропишите его путь в `TRUWEB_VPS_SSH_KEY`.
-- Если сервер принимает пароль: `TRUWEB_VPS_SSH_PASSWORD=...`
+```bash
+cd /var/www/business-card-site && bash deploy/full-refresh-production.sh
+```
 
-Затем в корне проекта: `npm run deploy:vps` — архив уйдёт на сервер и выполнится `deploy/server-build.sh`.
+Это делает `git fetch/reset` и затем запускает `deploy/server-build.sh`.
 
-Если ключей на ПК нет — см. раздел 1 (WinSCP + архив из `deploy/pack-for-upload.ps1`).
+`npm run deploy:vps` и ручная заливка архива остаются только как fallback для нестандартных ситуаций.
 
 ---
 
 ## 5. После каждого обновления сайта
 
-1. Залить новые файлы (без `node_modules` / `.next` / локальной `data`).
-2. На сервере:
+Нормальный сценарий: просто сделать `push` в `main`.
+
+Если нужен ручной fallback:
 
 ```bash
-cd /var/www/business-card-site
-bash deploy/server-build.sh
+cd /var/www/business-card-site && bash deploy/full-refresh-production.sh
 ```
 
 ---

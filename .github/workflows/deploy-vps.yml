@@ -13,9 +13,14 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-vps-main
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Pull and build on server
         uses: appleboy/ssh-action@v1.0.3
@@ -29,6 +34,11 @@ jobs:
             VPS_PATH="${{ secrets.VPS_PATH }}"
             if [ -z "$VPS_PATH" ]; then VPS_PATH="/var/www/business-card-site"; fi
             cd "$VPS_PATH"
+            if [ ! -d .git ]; then
+              echo "ERROR: $VPS_PATH is not a git repository. Run deploy/full-refresh-production.sh or bootstrap the server."
+              exit 1
+            fi
+            echo "==> git fetch/reset in $VPS_PATH"
             git fetch origin main
             git reset --hard origin/main
             chmod +x deploy/server-build.sh
